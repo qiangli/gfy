@@ -183,6 +183,9 @@ func InterpretResults(r *Result) string {
 	// Headline characterization.
 	sb.WriteString("### Overall Assessment\n\n")
 	switch {
+	case composite >= 1.0:
+		sb.WriteString("These two codebases are **identical** (100% composite similarity). ")
+		sb.WriteString("No structural differences were detected.\n\n")
 	case composite >= 0.95:
 		fmt.Fprintf(&sb, "These two codebases are **nearly identical** (%.0f%% composite similarity). ", composite*100)
 		sb.WriteString("The differences are minor — likely a small feature addition, bug fix, or routine maintenance.\n\n")
