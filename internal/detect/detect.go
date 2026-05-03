@@ -99,6 +99,22 @@ func isNoiseDir(name string) bool {
 	return false
 }
 
+// isSubmodule returns true if a directory is a git submodule.
+// Submodules have a .git file (not directory) containing "gitdir:".
+func isSubmodule(dir string) bool {
+	gitPath := filepath.Join(dir, ".git")
+	info, err := os.Lstat(gitPath)
+	if err != nil || info.IsDir() {
+		return false
+	}
+	// It's a file — read first line to confirm it's a submodule marker.
+	data, err := os.ReadFile(gitPath)
+	if err != nil {
+		return false
+	}
+	return strings.HasPrefix(string(data), "gitdir:")
+}
+
 // ignorePattern represents a single ignore or include rule.
 type ignorePattern struct {
 	anchor  string
@@ -298,6 +314,11 @@ func Detect(root string, followSymlinks bool) *types.DetectionResult {
 					return filepath.SkipDir
 				}
 				if ignore.isIgnored(path) {
+					return filepath.SkipDir
+				}
+				// Skip git submodules — they have a .git file (not directory)
+				// containing "gitdir:" pointing to the parent's .git/modules/.
+				if isSubmodule(path) {
 					return filepath.SkipDir
 				}
 				// Load .gitignore/.gfyignore from this subdirectory

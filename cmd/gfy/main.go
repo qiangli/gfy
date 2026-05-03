@@ -885,6 +885,10 @@ func runDiff(args []string, baseOverride string) error {
 	if err != nil {
 		return fmt.Errorf("remote branch: %w", err)
 	}
+
+	// Sync local ignore files to remote clone so both sides use the same rules.
+	syncIgnoreFiles(absRepo, remoteInfo.SourceDir)
+
 	remoteGraph, err := buildGraphFromDir(remoteInfo.SourceDir)
 	if err != nil {
 		return fmt.Errorf("remote graph: %w", err)
@@ -934,6 +938,31 @@ func runDiff(args []string, baseOverride string) error {
 	fmt.Printf("\n  Wrote %s\n", p)
 	fmt.Println("Done.")
 	return nil
+}
+
+// syncIgnoreFiles copies .gitignore and .gfyignore from src to dst so that
+// both local and remote builds use the same ignore rules during gfy diff.
+func syncIgnoreFiles(src, dst string) {
+	for _, name := range []string{".gitignore", ".gfyignore"} {
+		srcPath := filepath.Join(src, name)
+		dstPath := filepath.Join(dst, name)
+		data, err := os.ReadFile(srcPath)
+		if err != nil {
+			continue
+		}
+		// Check if remote already has the same content.
+		existing, _ := os.ReadFile(dstPath)
+		if string(existing) == string(data) {
+			continue
+		}
+		if err := os.WriteFile(dstPath, data, 0o644); err == nil {
+			if len(existing) == 0 {
+				fmt.Printf("  Applied local %s to remote clone\n", name)
+			} else {
+				fmt.Printf("  Updated remote %s with local version\n", name)
+			}
+		}
+	}
 }
 
 // buildGraphFromDir builds a fresh knowledge graph from a directory.
