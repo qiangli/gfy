@@ -154,7 +154,25 @@ Start an [MCP](https://modelcontextprotocol.io/) stdio server exposing the graph
 gfy serve .gfy-out/graph.json
 ```
 
-**MCP tools:** `query_graph`, `get_node`, `get_neighbors`, `get_community`, `god_nodes`, `graph_stats`, `shortest_path`
+**MCP tools (15):**
+
+| Tool | Description |
+|------|-------------|
+| `graph_stats` | Overview: node/edge counts, communities, confidence, relations, behavioral tags |
+| `get_node` | Look up a node with all attributes (tags, comments, source location, hierarchy) |
+| `get_neighbors` | Direct neighbors with edge metadata and optional relation filter |
+| `get_children` | Containment children (functions in a file, methods in a class) |
+| `shortest_path` | Find shortest path between two nodes |
+| `list_roots` | Top-level file/module nodes (top of containment hierarchy) |
+| `list_leaves` | Leaf functions/methods with optional tag filter |
+| `list_nodes` | Filter nodes by source file, behavioral tag, or file type |
+| `search` | Fuzzy keyword search with ranked results and scores |
+| `get_subgraph` | Extract focused subgraph around nodes with BFS expansion |
+| `god_nodes` | Most connected entities (excluding file-level hubs) |
+| `surprising_connections` | Cross-file/cross-community anomalous edges |
+| `suggest_questions` | Investigation questions from graph anomalies |
+| `community_info` | List communities with cohesion scores, or inspect one |
+| `trace_calls` | Call chains leading to behavioral tags (throws, fs, net, etc.) |
 
 ### query
 
@@ -263,4 +281,4 @@ gfy is based on **[graphify](https://github.com/safishamsi/graphify)** by [Safi 
 
 ## License
 
-See [graphify](https://github.com/safishamsi/graphify) for the original project's license terms.
+MIT
