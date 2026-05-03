@@ -1,8 +1,8 @@
 # gfy
 
-A pure Go tool that builds knowledge graphs from codebases using tree-sitter AST extraction. **Single binary, zero dependencies.**
+A pure Go tool that builds knowledge graphs from codebases using tree-sitter AST parsing. **Single binary, zero dependencies.**
 
-**Go port of [graphify](https://github.com/safishamsi/graphify)** by [Safi Shamsi](https://github.com/safishamsi) — an AI coding assistant skill that reads your files, builds a knowledge graph, and gives you back structure you didn't know was there.
+Extract structure from source code, build a knowledge graph, detect communities, compare codebases, trace behavioral call chains, and visualize it all — with one command.
 
 ## Install
 
@@ -10,7 +10,7 @@ A pure Go tool that builds knowledge graphs from codebases using tree-sitter AST
 go install github.com/qiangli/gfy/cmd/gfy@latest
 ```
 
-That's it. No Python, no Node.js, no system libraries, no runtime downloads. The binary includes all 206 language grammars and runs anywhere Go compiles to.
+No Python, no Node.js, no system libraries, no runtime downloads. The binary includes all 206 language grammars and runs anywhere Go compiles to.
 
 Or build from source:
 
@@ -35,42 +35,28 @@ Open `graph.html` in a browser for an interactive visualization with search, com
 
 ## Commands
 
-```bash
-gfy build [path]                           # build knowledge graph
-gfy build --format json,html,obsidian .    # choose export formats
-gfy compare [path1] [path2]                # compare two codebases
-gfy compare --normalize --sensitivity 0.7 [path1] [path2]  # cross-project similarity
-gfy diff                                   # compare local vs remote tracking branch
-gfy diff --base main                       # compare local vs origin/main
-gfy query [path] "search terms"            # search the graph (fuzzy)
-gfy path  [path] [source] [target]         # find shortest path
-gfy trace [path] --tag throws              # trace behavioral call chains
-gfy serve [path]                           # start MCP server
-gfy watch [path]                           # watch and rebuild with live UI
-gfy view  [path]                           # open graph.html in browser
-```
-
 ### build
 
-Scans a directory, extracts AST structure from code files, builds a knowledge graph, detects communities, and exports results.
+Scan a directory, extract AST structure from code files, build a knowledge graph, detect communities, and export results.
 
 ```bash
 gfy build .
 gfy build --format json,html,obsidian,cypher,graphml ./my-project
 gfy build --view .                         # build and open in browser
+gfy build -o ./output .                    # custom output directory
 ```
 
-**Export formats:**
+**Flags:**
 
-| Format | File | Description |
-|--------|------|-------------|
-| `json` | `graph.json` | NetworkX-compatible node-link JSON |
-| `html` | `graph.html` | Interactive vis.js visualization |
-| `obsidian` | `obsidian/` | Obsidian vault with wikilinks |
-| `cypher` | `graph.cypher` | Neo4j Cypher import statements |
-| `graphml` | `graph.graphml` | GraphML XML for Gephi/Cytoscape |
-
-Default: `json,html`
+| Flag | Description |
+|------|-------------|
+| `-f, --format` | Export formats: `json`, `html`, `obsidian`, `cypher`, `graphml` (default `json,html`) |
+| `-o, --out` | Output directory (default `<path>/.gfy-out/`) |
+| `--view` | Open graph.html in browser after building |
+| `--no-cache` | Ignore and clear cached extraction results |
+| `--no-semantic` | Skip semantic extraction even if Ollama is available |
+| `--model` | LLM model for semantic extraction (auto-selects if empty) |
+| `--ollama-url` | Ollama server URL (default `http://localhost:11434`) |
 
 ### compare
 
@@ -92,11 +78,11 @@ gfy compare --branch main --branch feature-x .
 # N-way comparison
 gfy compare ./v1 ./v2 ./v3
 
-# Skip expensive computations
+# Fast mode: skip expensive computations
 gfy compare --skip-trees --skip-communities ./v1 ./v2
 ```
 
-**Comparison metrics (11 total):**
+**11 comparison metrics:**
 
 | Metric | Category | What it measures |
 |--------|----------|-----------------|
@@ -112,10 +98,20 @@ gfy compare --skip-trees --skip-communities ./v1 ./v2
 | Anti-Unification | Tree | Shared top-down structural template |
 | Role Distribution | Tree | Behavioral profile similarity (NodeType + tags) |
 
-**Cross-project flags:**
+**Flags:**
 
-- `--normalize` — Align nodes by structural fingerprint (Weisfeiler-Lehman) instead of ID
-- `--sensitivity` (0-1) — How aggressively to look through renames/refactors for intrinsic similarity. At higher values: uses semantic AHU hashing (NodeType + behavioral tags), cross-project weights (zeroes useless Jaccard), and more permissive alignment thresholds
+| Flag | Description |
+|------|-------------|
+| `--normalize` | Align nodes by structural fingerprint (Weisfeiler-Lehman) instead of ID |
+| `--sensitivity` | 0-1, how aggressively to look through renames/refactors |
+| `--branch` | Branches to compare (requires exactly one source) |
+| `--skip-trees` | Skip tree comparison algorithms (faster) |
+| `--skip-communities` | Skip community comparison (faster) |
+| `--estimate` | N-way: compute N-1 full comparisons, estimate rest via triangle inequality |
+| `--rename-threshold` | Min similarity for rename detection (default 0.6) |
+| `-f, --format` | Output format: `markdown`, `json` (default `markdown`) |
+
+**Report includes:** composite similarity score, node/edge diffs, rename candidates, impact analysis (transitive dependents), drift analysis (import changes), and community evolution (splits, merges, stable).
 
 ### diff
 
@@ -134,13 +130,25 @@ Find all call chains leading to functions with a specific behavioral tag.
 ```bash
 gfy trace . --tag throws              # what triggers panics/exceptions?
 gfy trace . --tag net --depth 5       # what reaches network calls?
+gfy trace . --tag fs                  # what touches the filesystem?
 ```
 
-Tags: `throws`, `catches`, `logs`, `fs`, `net`, `exec`, `async`, `unsafe`, `test`
+**Tags:** `throws`, `catches`, `logs`, `fs`, `net`, `exec`, `async`, `unsafe`, `test`
+
+### watch
+
+Monitor a directory for code changes and automatically rebuild the graph. Serves a live-reloading web UI with real-time updates via SSE.
+
+```bash
+gfy watch .
+# Live graph: http://localhost:<port>
+```
+
+The UI provides interactive vis.js visualization with search, community filtering, click-to-inspect node details, and live status indicators.
 
 ### serve
 
-Starts an [MCP](https://modelcontextprotocol.io/) stdio server exposing the graph for AI assistants.
+Start an [MCP](https://modelcontextprotocol.io/) stdio server exposing the graph for AI assistants.
 
 ```bash
 gfy serve .gfy-out/graph.json
@@ -165,13 +173,34 @@ Find the shortest path between two nodes.
 gfy path .gfy-out/graph.json "Server" "Database"
 ```
 
-### watch
+### view
 
-Monitor a directory for code changes and automatically rebuild the graph. Opens a live-reloading web UI with real-time updates via SSE.
+Open `graph.html` in the default browser. Auto-builds if the graph doesn't exist.
 
 ```bash
-gfy watch .
-# Live graph: http://localhost:52431
+gfy view .
+```
+
+## Source Resolution
+
+gfy accepts multiple source types — not just local directories:
+
+| Source | Example | Caching |
+|--------|---------|---------|
+| Local directory | `gfy build ./my-project` | Per-file extraction cache |
+| Git URL | `gfy build https://github.com/user/repo` | Cloned to `~/.gfy/git/` |
+| Archive | `gfy build ./project.zip` | Extracted to `~/.gfy/archive/` |
+
+Supports `.zip`, `.tar`, `.tar.gz`, and `.tgz` archives. Git clones support SSH (agent-based) and HTTPS (credential helper) authentication.
+
+## Semantic Extraction
+
+When [Ollama](https://ollama.ai) is running, gfy can extract concepts and relationships from non-code files (docs, papers, markdown) using LLM analysis. Results are cached per-file and merged into the knowledge graph alongside AST-extracted structure.
+
+```bash
+gfy build .                                # auto-detects Ollama
+gfy build --model llama3.2 .               # use specific model
+gfy build --no-semantic .                   # skip LLM extraction
 ```
 
 ## Supported Languages (22)
@@ -186,15 +215,27 @@ Plus Vue, Svelte (via JS extractor) and Blade templates (regex).
 detect → extract → build → cluster → analyze → report → export
 ```
 
-1. **Detect** — Walk the filesystem, classify files (code, document, paper, image, video), respect `.gfyignore`
-2. **Extract** — Parse code with [tree-sitter](https://tree-sitter.github.io/) (via [gotreesitter](https://github.com/odvcencio/gotreesitter)) to extract classes, functions, imports, call graphs
+1. **Detect** — Walk the filesystem, classify files (code, document, paper, image, video), respect `.gitignore` and `.gfyignore`, skip sensitive files
+2. **Extract** — Parse code with tree-sitter (via [gotreesitter](https://github.com/odvcencio/gotreesitter)) to extract classes, functions, imports, call graphs, and behavioral tags
 3. **Build** — Assemble extracted nodes and edges into a graph with ID normalization and deduplication
 4. **Cluster** — Detect communities using the Louvain algorithm
-5. **Analyze** — Identify god nodes (most connected), surprising connections (cross-file/cross-community), suggested questions
+5. **Analyze** — Identify god nodes, surprising connections, and generate suggested investigation questions
 6. **Report** — Generate `GRAPH_REPORT.md` with findings
 7. **Export** — Write graph in requested formats
 
 Every relationship is tagged with confidence: `EXTRACTED` (from AST), `INFERRED` (cross-file resolution), or `AMBIGUOUS`.
+
+## Export Formats
+
+| Format | File | Description |
+|--------|------|-------------|
+| `json` | `graph.json` | NetworkX-compatible node-link JSON |
+| `html` | `graph.html` | Interactive vis.js visualization |
+| `obsidian` | `obsidian/` | Obsidian vault with wikilinks |
+| `cypher` | `graph.cypher` | Neo4j Cypher import statements |
+| `graphml` | `graph.graphml` | GraphML XML for Gephi/Cytoscape |
+
+Default: `json,html`
 
 ## Output
 
@@ -205,12 +246,15 @@ Every relationship is tagged with confidence: `EXTRACTED` (from AST), `INFERRED`
 ├── graph.html         # interactive visualization (open in browser)
 ├── graph.cypher       # Neo4j import (optional)
 ├── graph.graphml      # Gephi/Cytoscape (optional)
-└── obsidian/          # Obsidian vault (optional)
+├── obsidian/          # Obsidian vault (optional)
+└── cache/
+    ├── extract/       # AST extraction cache (per-file, SHA256-keyed)
+    └── semantic/      # LLM extraction cache (per-file, SHA256-keyed)
 ```
 
 ## Credits
 
-This project is a Go port of **[graphify](https://github.com/safishamsi/graphify)** by [Safi Shamsi](https://github.com/safishamsi). The original Python implementation provides the architectural design, pipeline structure, extraction patterns, and HTML visualization template that this project faithfully reproduces in Go.
+gfy is based on **[graphify](https://github.com/safishamsi/graphify)** by [Safi Shamsi](https://github.com/safishamsi), which provides the foundational pipeline design, extraction patterns, and HTML visualization template.
 
 - **Original project:** [github.com/safishamsi/graphify](https://github.com/safishamsi/graphify)
 - **PyPI package:** [graphifyy](https://pypi.org/project/graphifyy/)
