@@ -182,24 +182,25 @@ func InterpretResults(r *Result) string {
 
 	// Headline characterization.
 	sb.WriteString("### Overall Assessment\n\n")
+	displayPct := fmt.Sprintf("%.2f", composite*100)
 	switch {
-	case composite >= 1.0:
+	case displayPct == "100.00":
 		sb.WriteString("These two codebases are **identical** (100% composite similarity). ")
 		sb.WriteString("No structural differences were detected.\n\n")
 	case composite >= 0.95:
-		fmt.Fprintf(&sb, "These two codebases are **nearly identical** (%.0f%% composite similarity). ", composite*100)
+		fmt.Fprintf(&sb, "These two codebases are **nearly identical** (%s%% composite similarity). ", displayPct)
 		sb.WriteString("The differences are minor — likely a small feature addition, bug fix, or routine maintenance.\n\n")
 	case composite >= 0.80:
-		fmt.Fprintf(&sb, "These two codebases are **highly similar** (%.0f%% composite similarity). ", composite*100)
+		fmt.Fprintf(&sb, "These two codebases are **highly similar** (%s%% composite similarity). ", displayPct)
 		sb.WriteString("They share the same architecture with moderate changes — likely a feature branch or incremental release.\n\n")
 	case composite >= 0.60:
-		fmt.Fprintf(&sb, "These two codebases are **moderately similar** (%.0f%% composite similarity). ", composite*100)
+		fmt.Fprintf(&sb, "These two codebases are **moderately similar** (%s%% composite similarity). ", displayPct)
 		sb.WriteString("They share a common core but have diverged significantly — possibly a major refactor or parallel development.\n\n")
 	case composite >= 0.35:
-		fmt.Fprintf(&sb, "These two codebases are **loosely related** (%.0f%% composite similarity). ", composite*100)
+		fmt.Fprintf(&sb, "These two codebases are **loosely related** (%s%% composite similarity). ", displayPct)
 		sb.WriteString("They share some structural patterns but differ substantially — possibly independent implementations of similar requirements.\n\n")
 	default:
-		fmt.Fprintf(&sb, "These two codebases are **structurally unrelated** (%.0f%% composite similarity). ", composite*100)
+		fmt.Fprintf(&sb, "These two codebases are **structurally unrelated** (%s%% composite similarity). ", displayPct)
 		sb.WriteString("Very little shared structure was found.\n\n")
 	}
 
