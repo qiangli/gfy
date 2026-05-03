@@ -240,6 +240,27 @@ func main() {
 		"how aggressively to look through renames/refactors for intrinsic similarity (0-1, default: 0.5 with --normalize)")
 	rootCmd.AddCommand(compareCmd)
 
+	// --- diff command ---
+	var diffBase string
+	diffCmd := &cobra.Command{
+		Use:   "diff [source]",
+		Short: "Compare local working tree against remote tracking branch",
+		Long: "Auto-detect the remote tracking branch, build knowledge graphs for\n" +
+			"both the local working tree and the remote branch, then compare them.\n\n" +
+			"If no source is given, uses the current directory.\n\n" +
+			"Examples:\n" +
+			"  gfy diff                    # auto-detect tracking branch\n" +
+			"  gfy diff --base main        # force comparison against origin/main\n" +
+			"  gfy diff ./myrepo           # run on a different repo path",
+		Args: cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runDiff(args, diffBase)
+		},
+	}
+	diffCmd.Flags().StringVar(&diffBase, "base", "",
+		"override tracking branch (e.g., main, develop)")
+	rootCmd.AddCommand(diffCmd)
+
 	rootCmd.PersistentFlags().StringVarP(&outFlag, "out", "o", "", "output directory (default: <path>/gfy-out/)")
 
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
@@ -805,6 +826,125 @@ func buildGraphForBranch(repoPath, branch string) (*graph.Graph, error) {
 	os.MkdirAll(filepath.Dir(jsonPath), 0o755)
 	export.ToJSON(g, jsonPath, true)
 	return g, nil
+}
+
+// --- diff ---
+
+func runDiff(args []string, baseOverride string) error {
+	repoPath := "."
+	if len(args) > 0 {
+		repoPath = args[0]
+	}
+	absRepo, err := filepath.Abs(repoPath)
+	if err != nil {
+		return err
+	}
+
+	// Detect tracking branch.
+	var tracking *source.TrackingInfo
+	if baseOverride != "" {
+		// User override: detect remote URL from git config, use specified branch.
+		info, err := source.DetectTracking(absRepo)
+		if err != nil {
+			// If detection fails entirely, assume origin.
+			tracking = &source.TrackingInfo{
+				LocalBranch:  "HEAD",
+				Remote:       "origin",
+				RemoteBranch: baseOverride,
+			}
+			// Try to get the remote URL from the repo config.
+			remoteURL, urlErr := source.RemoteURL(absRepo, "origin")
+			if urlErr != nil {
+				return fmt.Errorf("cannot determine remote URL: %w (git detection: %w)", urlErr, err)
+			}
+			tracking.RemoteURL = remoteURL
+		} else {
+			tracking = info
+			tracking.RemoteBranch = baseOverride
+		}
+		fmt.Printf("Comparing local against: %s/%s\n", tracking.Remote, tracking.RemoteBranch)
+	} else {
+		tracking, err = source.DetectTracking(absRepo)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Branch: %s → tracks %s/%s\n", tracking.LocalBranch, tracking.Remote, tracking.RemoteBranch)
+	}
+
+	// Build graph from local working tree.
+	fmt.Println("\nBuilding local graph...")
+	localGraph, err := buildGraphFromDir(absRepo)
+	if err != nil {
+		return fmt.Errorf("local graph: %w", err)
+	}
+	fmt.Printf("  Local: %d nodes, %d edges\n", localGraph.NodeCount(), localGraph.EdgeCount())
+
+	// Build graph from remote tracking branch.
+	fmt.Printf("\nBuilding remote graph (%s/%s)...\n", tracking.Remote, tracking.RemoteBranch)
+	remoteInfo, err := source.ResolveForBranch(tracking.RemoteURL, tracking.RemoteBranch, "")
+	if err != nil {
+		return fmt.Errorf("remote branch: %w", err)
+	}
+	remoteGraph, err := buildGraphFromDir(remoteInfo.SourceDir)
+	if err != nil {
+		return fmt.Errorf("remote graph: %w", err)
+	}
+	fmt.Printf("  Remote: %d nodes, %d edges\n", remoteGraph.NodeCount(), remoteGraph.EdgeCount())
+
+	// Compare: remote (before) vs local (after).
+	fmt.Println("\nComparing graphs...")
+	opts := compare.Options{
+		RenameThreshold: 0.6,
+		OnProgress: func(step string) {
+			fmt.Printf("  %s\n", step)
+		},
+	}
+	remoteLabel := fmt.Sprintf("%s/%s", tracking.Remote, tracking.RemoteBranch)
+	localLabel := fmt.Sprintf("local/%s", tracking.LocalBranch)
+	result := compare.Compare(remoteGraph, localGraph, remoteLabel, localLabel, opts)
+
+	// Print summary.
+	fmt.Printf("\nComposite similarity: %.2f\n", result.Summary.CompositeScore)
+	fmt.Printf("  Nodes: +%d / -%d / ~%d\n",
+		result.Summary.NodesAdded, result.Summary.NodesRemoved, result.Summary.NodesModified)
+	fmt.Printf("  Edges: +%d / -%d / ~%d\n",
+		result.Summary.EdgesAdded, result.Summary.EdgesRemoved, result.Summary.EdgesModified)
+	if len(result.Renames) > 0 {
+		fmt.Printf("  Rename candidates: %d\n", len(result.Renames))
+	}
+
+	fmt.Println()
+	fmt.Print(compare.InterpretResults(result))
+
+	// Write report.
+	outDir := filepath.Join(absRepo, "gfy-out")
+	if outFlag != "" {
+		outDir, _ = filepath.Abs(outFlag)
+	}
+	if err := os.MkdirAll(outDir, 0o755); err != nil {
+		return fmt.Errorf("create output directory: %w", err)
+	}
+
+	ts := time.Now().Format("20060102-150405")
+	reportMD := compare.GenerateReport(result)
+	p := filepath.Join(outDir, fmt.Sprintf("DIFF_REPORT-%s.md", ts))
+	if err := os.WriteFile(p, []byte(reportMD), 0o644); err != nil {
+		return fmt.Errorf("write report: %w", err)
+	}
+	fmt.Printf("\n  Wrote %s\n", p)
+	fmt.Println("Done.")
+	return nil
+}
+
+// buildGraphFromDir builds a fresh knowledge graph from a directory.
+func buildGraphFromDir(dir string) (*graph.Graph, error) {
+	result := detect.Detect(dir, false)
+	codeFiles := result.Files[types.Code]
+	if len(codeFiles) == 0 {
+		return nil, fmt.Errorf("no code files found in %s", dir)
+	}
+	extraction := extract.Extract(codeFiles, dir)
+	return build.BuildFromResult(extraction, false), nil
 }
 
 func printHeatmap(labels []string, heatmap [][]float64) {

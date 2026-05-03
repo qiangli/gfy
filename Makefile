@@ -3,7 +3,7 @@ VERSION  := $(shell git describe --tags --always --dirty 2>/dev/null || echo dev
 LDFLAGS  := -ldflags "-X main.version=$(VERSION)"
 BINARY   := gfy
 
-.PHONY: help build test tidy lint install clean
+.PHONY: help build test tidy lint install clean diff
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -24,6 +24,9 @@ lint: ## Run golangci-lint
 
 install: ## Install to $GOPATH/bin
 	go install $(LDFLAGS) ./cmd/gfy
+
+diff: build ## Compare local working tree against remote tracking branch
+	./$(BINARY) diff .
 
 clean: ## Remove build artifacts
 	rm -f $(BINARY)
