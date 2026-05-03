@@ -180,6 +180,18 @@ func InterpretResults(r *Result) string {
 	var sb strings.Builder
 	composite := r.Summary.CompositeScore
 
+	// If there are zero structural changes, the codebases are identical.
+	// (Composite score may be slightly < 1.0 due to non-deterministic community detection.)
+	isIdentical := r.Summary.NodesAdded == 0 && r.Summary.NodesRemoved == 0 &&
+		r.Summary.NodesModified == 0 && r.Summary.EdgesAdded == 0 &&
+		r.Summary.EdgesRemoved == 0 && r.Summary.EdgesModified == 0
+
+	if isIdentical {
+		sb.WriteString("### Overall Assessment\n\n")
+		sb.WriteString("These two codebases are **identical**. No structural differences were detected.\n\n")
+		return sb.String()
+	}
+
 	// Headline characterization.
 	sb.WriteString("### Overall Assessment\n\n")
 	displayPct := fmt.Sprintf("%.2f", composite*100)
