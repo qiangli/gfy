@@ -17,6 +17,7 @@ make lint           # golangci-lint run
 make tidy           # go mod tidy, fmt, vet
 make install        # go install ./cmd/gfy
 make clean          # remove binary and .gfy-out/
+make diff           # build and run `gfy diff .`
 make help           # list all targets
 go test -run TestExtractGo ./internal/extract/       # single extract test
 go test -run TestLanguageExtractors ./internal/extract/  # all language tests
@@ -109,6 +110,7 @@ Custom GC tuning in `cmd/gfy/main.go` init: `GOGC=50` (triggers GC sooner), `GOM
 - `github.com/ledongthuc/pdf` — PDF text extraction (native Go)
 - `github.com/xuri/excelize/v2` — XLSX reading (native Go)
 - `github.com/nguyenthenguyen/docx` — DOCX reading (native Go)
+- `github.com/go-git/go-git/v5` — Git operations (clone, pull, branch detection) for `diff` and `source` packages
 
 ## gotreesitter API Notes
 

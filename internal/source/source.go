@@ -179,17 +179,22 @@ func resolveGit(inputPath, outFlag string) (*Info, error) {
 	hash := hashString(url)
 	cacheDir := filepath.Join(cacheBase(), "git", hash)
 
-	// Check for existing clone.
+	// Check for existing clone; pull to update, re-clone if pull fails.
+	needsClone := true
 	if repo, err := git.PlainOpen(cacheDir); err == nil {
 		fmt.Printf("Updating cached clone: %s\n", cacheDir)
 		w, err := repo.Worktree()
 		if err == nil {
 			pullErr := w.Pull(&git.PullOptions{Depth: 1, Auth: gitAuth(url)})
-			if pullErr != nil && pullErr != git.NoErrAlreadyUpToDate {
-				fmt.Printf("  Warning: pull failed: %v\n", pullErr)
+			if pullErr == nil || pullErr == git.NoErrAlreadyUpToDate {
+				needsClone = false
+			} else {
+				fmt.Printf("  Pull failed: %v; re-cloning...\n", pullErr)
+				os.RemoveAll(cacheDir)
 			}
 		}
-	} else {
+	}
+	if needsClone {
 		fmt.Printf("Cloning %s to %s...\n", url, cacheDir)
 		if err := os.MkdirAll(filepath.Dir(cacheDir), 0o755); err != nil {
 			return nil, fmt.Errorf("create cache dir: %w", err)
@@ -263,7 +268,8 @@ func ResolveForBranch(repoPath, branch, outFlag string) (*Info, error) {
 	hash := hashString(repoURL)
 	cacheDir := filepath.Join(cacheBase(), "compare", hash, branch)
 
-	// Check for existing clone.
+	// Check for existing clone; pull to update, re-clone if pull fails.
+	needsClone := true
 	if _, err := git.PlainOpen(cacheDir); err == nil {
 		fmt.Printf("Using cached branch clone: %s\n", cacheDir)
 		repo, err := git.PlainOpen(cacheDir)
@@ -271,12 +277,16 @@ func ResolveForBranch(repoPath, branch, outFlag string) (*Info, error) {
 			w, err := repo.Worktree()
 			if err == nil {
 				pullErr := w.Pull(&git.PullOptions{Depth: 1, Auth: gitAuth(repoURL)})
-				if pullErr != nil && pullErr != git.NoErrAlreadyUpToDate {
-					fmt.Printf("  Warning: pull failed: %v\n", pullErr)
+				if pullErr == nil || pullErr == git.NoErrAlreadyUpToDate {
+					needsClone = false
+				} else {
+					fmt.Printf("  Pull failed: %v; re-cloning...\n", pullErr)
+					os.RemoveAll(cacheDir)
 				}
 			}
 		}
-	} else {
+	}
+	if needsClone {
 		fmt.Printf("Cloning branch %q to %s...\n", branch, cacheDir)
 		if err := os.MkdirAll(filepath.Dir(cacheDir), 0o755); err != nil {
 			return nil, fmt.Errorf("create cache dir: %w", err)
