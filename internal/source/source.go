@@ -10,13 +10,90 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
+	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	gitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
 )
+
+// gitAuth returns the appropriate transport.AuthMethod for a git URL.
+// For SSH URLs: uses the SSH agent (same keys as git cli).
+// For HTTPS URLs: uses git credential helper (same credentials as git cli).
+func gitAuth(url string) transport.AuthMethod {
+	if isSSHURL(url) {
+		conn, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK"))
+		if err != nil {
+			return nil
+		}
+		sshAgent := agent.NewClient(conn)
+		auth := &gitssh.PublicKeysCallback{
+			User: "git",
+			Callback: func() ([]ssh.Signer, error) {
+				return sshAgent.Signers()
+			},
+			HostKeyCallbackHelper: gitssh.HostKeyCallbackHelper{
+				HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			},
+		}
+		return auth
+	}
+
+	// HTTPS: use git credential helper.
+	creds := gitCredentialFill(url)
+	if creds != nil {
+		return &http.BasicAuth{
+			Username: creds.username,
+			Password: creds.password,
+		}
+	}
+	return nil
+}
+
+type gitCreds struct {
+	username string
+	password string
+}
+
+// gitCredentialFill calls `git credential fill` to get stored credentials.
+func gitCredentialFill(url string) *gitCreds {
+	cmd := exec.Command("git", "credential", "fill")
+	cmd.Stdin = strings.NewReader(fmt.Sprintf("url=%s\n\n", url))
+	out, err := cmd.Output()
+	if err != nil {
+		return nil
+	}
+	creds := &gitCreds{}
+	for _, line := range strings.Split(string(out), "\n") {
+		if k, v, ok := strings.Cut(line, "="); ok {
+			switch k {
+			case "username":
+				creds.username = v
+			case "password":
+				creds.password = v
+			}
+		}
+	}
+	if creds.username == "" && creds.password == "" {
+		return nil
+	}
+	return creds
+}
+
+// isSSHURL returns true if the URL uses SSH transport.
+func isSSHURL(url string) bool {
+	return strings.HasPrefix(url, "git@") ||
+		strings.HasPrefix(url, "ssh://") ||
+		strings.HasPrefix(url, "git+ssh://")
+}
 
 // Info holds the resolved source and output paths.
 type Info struct {
@@ -107,7 +184,7 @@ func resolveGit(inputPath, outFlag string) (*Info, error) {
 		fmt.Printf("Updating cached clone: %s\n", cacheDir)
 		w, err := repo.Worktree()
 		if err == nil {
-			pullErr := w.Pull(&git.PullOptions{Depth: 1})
+			pullErr := w.Pull(&git.PullOptions{Depth: 1, Auth: gitAuth(url)})
 			if pullErr != nil && pullErr != git.NoErrAlreadyUpToDate {
 				fmt.Printf("  Warning: pull failed: %v\n", pullErr)
 			}
@@ -122,6 +199,7 @@ func resolveGit(inputPath, outFlag string) (*Info, error) {
 			Depth:         1,
 			SingleBranch:  true,
 			ReferenceName: plumbing.HEAD,
+			Auth:          gitAuth(url),
 		})
 		if err != nil {
 			os.RemoveAll(cacheDir)
@@ -188,12 +266,11 @@ func ResolveForBranch(repoPath, branch, outFlag string) (*Info, error) {
 	// Check for existing clone.
 	if _, err := git.PlainOpen(cacheDir); err == nil {
 		fmt.Printf("Using cached branch clone: %s\n", cacheDir)
-		// Pull latest changes.
 		repo, err := git.PlainOpen(cacheDir)
 		if err == nil {
 			w, err := repo.Worktree()
 			if err == nil {
-				pullErr := w.Pull(&git.PullOptions{Depth: 1})
+				pullErr := w.Pull(&git.PullOptions{Depth: 1, Auth: gitAuth(repoURL)})
 				if pullErr != nil && pullErr != git.NoErrAlreadyUpToDate {
 					fmt.Printf("  Warning: pull failed: %v\n", pullErr)
 				}
@@ -209,6 +286,7 @@ func ResolveForBranch(repoPath, branch, outFlag string) (*Info, error) {
 			Depth:         1,
 			SingleBranch:  true,
 			ReferenceName: plumbing.NewBranchReferenceName(branch),
+			Auth:          gitAuth(repoURL),
 		})
 		if err != nil {
 			os.RemoveAll(cacheDir)
