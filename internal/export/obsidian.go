@@ -73,14 +73,14 @@ func ToObsidian(g *graph.Graph, communities map[int][]string, communityLabels ma
 		}
 
 		// Tags.
-		ftypeTag := "graphify/document"
+		ftypeTag := "gfy/document"
 		switch fileType {
 		case "code":
-			ftypeTag = "graphify/code"
+			ftypeTag = "gfy/code"
 		case "paper":
-			ftypeTag = "graphify/paper"
+			ftypeTag = "gfy/paper"
 		case "image":
-			ftypeTag = "graphify/image"
+			ftypeTag = "gfy/image"
 		}
 		commTag := "community/" + strings.ReplaceAll(safeName(commLabel), " ", "_")
 

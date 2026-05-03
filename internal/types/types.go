@@ -76,5 +76,5 @@ type DetectionResult struct {
 	NeedsGraph          bool                  `json:"needs_graph"`
 	Warning             string                `json:"warning,omitempty"`
 	SkippedSensitive    []string              `json:"skipped_sensitive"`
-	GraphifyIgnoreCount int                   `json:"graphifyignore_patterns"`
+	GfyIgnoreCount int                   `json:"gfyignore_patterns"`
 }

@@ -185,7 +185,7 @@ func ToHTML(g *graph.Graph, communities map[int][]string, communityLabels map[in
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>graphify - %s</title>
+<title>gfy - %s</title>
 <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 %s
 </head>

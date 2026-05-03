@@ -69,7 +69,7 @@ func main() {
 			"Sources can be a local directory, an archive (.zip, .tar, .tar.gz, .tgz),\n" +
 			"or a git URL (https://, git://, ssh://). Archives and git repos are cached\n" +
 			"under ~/.gfy/ for fast re-runs.\n\n" +
-			"A pure Go port of graphify (https://github.com/safishamsi/graphify).",
+			"A pure Go port of graphify (https://github.com/safishamsi/graphify). See README for credits.",
 		Version: version,
 	}
 

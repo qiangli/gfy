@@ -120,7 +120,7 @@ type ignorePattern struct {
 	anchor  string
 	pattern string
 	negate  bool   // true for !pattern (re-include)
-	source  string // "gitignore" or "graphifyignore"
+	source  string // "gitignore" or "gfyignore"
 }
 
 // ignoreStack tracks ignore patterns encountered during directory traversal.
@@ -367,7 +367,7 @@ func Detect(root string, followSymlinks bool) *types.DetectionResult {
 		result.TotalFiles += len(files)
 	}
 
-	result.GraphifyIgnoreCount = ignore.count()
+	result.GfyIgnoreCount = ignore.count()
 	result.NeedsGraph = result.TotalWords >= CorpusWarnThreshold
 
 	if !result.NeedsGraph {

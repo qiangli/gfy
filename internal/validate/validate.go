@@ -1,4 +1,4 @@
-// Package validate enforces the graphify extraction schema.
+// Package validate enforces the gfy extraction schema.
 package validate
 
 import (
@@ -18,7 +18,7 @@ var validConfidences = map[types.Confidence]bool{
 	types.Ambiguous: true,
 }
 
-// Validate checks an ExtractionResult against the graphify schema.
+// Validate checks an ExtractionResult against the gfy schema.
 // Returns a list of error strings — empty means valid.
 func Validate(result *types.ExtractionResult) []string {
 	var errors []string

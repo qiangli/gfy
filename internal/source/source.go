@@ -98,7 +98,7 @@ func isSSHURL(url string) bool {
 // Info holds the resolved source and output paths.
 type Info struct {
 	SourceDir string // local directory to analyze
-	OutDir    string // where to write graphify output
+	OutDir    string // where to write gfy output
 }
 
 // Resolve examines inputPath and returns resolved local paths.
