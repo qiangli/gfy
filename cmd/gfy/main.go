@@ -706,7 +706,7 @@ func runCompare(args []string, branches []string, formatStr string, skipCommunit
 				result.Alignment.MatchedCount, result.Alignment.AvgScore,
 				result.Alignment.UnmatchedACount, result.Alignment.UnmatchedBCount)
 		}
-		fmt.Printf("\nComposite similarity: %.2f\n", result.Summary.CompositeScore)
+		fmt.Printf("\nComposite similarity: %.2f%%\n", result.Summary.CompositeScore*100)
 		fmt.Printf("  Graph:  Jaccard=%.2f  JSD=%.4f  NMI=%.2f  GED=%d\n",
 			result.Similarity.NodeJaccard, result.Similarity.DegreeJSD,
 			result.Similarity.CommunityNMI, result.Summary.ApproxGED)
@@ -908,7 +908,7 @@ func runDiff(args []string, baseOverride string) error {
 	result := compare.Compare(remoteGraph, localGraph, remoteLabel, localLabel, opts)
 
 	// Print summary.
-	fmt.Printf("\nComposite similarity: %.2f\n", result.Summary.CompositeScore)
+	fmt.Printf("\nComposite similarity: %.2f%%\n", result.Summary.CompositeScore*100)
 	fmt.Printf("  Nodes: +%d / -%d / ~%d\n",
 		result.Summary.NodesAdded, result.Summary.NodesRemoved, result.Summary.NodesModified)
 	fmt.Printf("  Edges: +%d / -%d / ~%d\n",

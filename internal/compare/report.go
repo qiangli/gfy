@@ -27,7 +27,7 @@ func GenerateReport(r *Result) string {
 		sb.WriteString(fmt.Sprintf("**Community alignment:** %.2f (Normalized Mutual Information)\n", r.Similarity.CommunityNMI))
 	}
 	sb.WriteString(fmt.Sprintf("**Approximate edit distance:** %d\n", r.Summary.ApproxGED))
-	sb.WriteString(fmt.Sprintf("\n**Composite similarity: %.2f**\n", r.Summary.CompositeScore))
+	sb.WriteString(fmt.Sprintf("\n**Composite similarity: %.2f%%**\n", r.Summary.CompositeScore*100))
 
 	// Tree scores.
 	if r.Similarity.TreeScores != nil {
