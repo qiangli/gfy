@@ -40,7 +40,7 @@ var SkipDirs = map[string]bool{
 	"site-packages": true, "lib64": true,
 	".pytest_cache": true, ".mypy_cache": true, ".ruff_cache": true,
 	".tox": true, ".eggs": true,
-	"gfy-out": true,
+	".gfy-out": true,
 }
 
 // Lock and generated files to skip.

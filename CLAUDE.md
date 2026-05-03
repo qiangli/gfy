@@ -16,14 +16,14 @@ make test           # go test ./cmd/... ./internal/...
 make lint           # golangci-lint run
 make tidy           # go mod tidy, fmt, vet
 make install        # go install ./cmd/gfy
-make clean          # remove binary and gfy-out/
+make clean          # remove binary and .gfy-out/
 make help           # list all targets
 go test -run TestExtractGo ./internal/extract/       # single extract test
 go test -run TestLanguageExtractors ./internal/extract/  # all language tests
 go test -run TestFullPipeline ./internal/              # full e2e pipeline test
 ```
 
-**Output:** Results go to `gfy-out/` (report, graph.json, graph.html). Default export formats: `json,html`.
+**Output:** Results go to `.gfy-out/` (report, graph.json, graph.html). Default export formats: `json,html`.
 
 **Important:** Use `./cmd/... ./internal/...` instead of `./...` for tests — the `reference/` directory contains Python/C files that confuse the Go toolchain.
 

@@ -63,7 +63,7 @@ func TestResolveDir(t *testing.T) {
 	if info.SourceDir != dir {
 		t.Errorf("SourceDir = %q, want %q", info.SourceDir, dir)
 	}
-	wantOut := filepath.Join(dir, "gfy-out")
+	wantOut := filepath.Join(dir, ".gfy-out")
 	if info.OutDir != wantOut {
 		t.Errorf("OutDir = %q, want %q", info.OutDir, wantOut)
 	}

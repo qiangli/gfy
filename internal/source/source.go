@@ -46,7 +46,7 @@ func resolveDir(inputPath, outFlag string) (*Info, error) {
 	if err != nil {
 		return nil, fmt.Errorf("resolve path: %w", err)
 	}
-	outDir := filepath.Join(absPath, "gfy-out")
+	outDir := filepath.Join(absPath, ".gfy-out")
 	if outFlag != "" {
 		outDir, err = filepath.Abs(outFlag)
 		if err != nil {
@@ -87,7 +87,7 @@ func resolveArchive(inputPath, outFlag string) (*Info, error) {
 	// Unwrap single top-level directory.
 	sourceDir = unwrapSingleDir(sourceDir)
 
-	outDir := filepath.Join(sourceDir, "gfy-out")
+	outDir := filepath.Join(sourceDir, ".gfy-out")
 	if outFlag != "" {
 		outDir, err = filepath.Abs(outFlag)
 		if err != nil {
@@ -131,7 +131,7 @@ func resolveGit(inputPath, outFlag string) (*Info, error) {
 
 	var outDir string
 	var err error
-	outDir = filepath.Join(cacheDir, "gfy-out")
+	outDir = filepath.Join(cacheDir, ".gfy-out")
 	if outFlag != "" {
 		outDir, err = filepath.Abs(outFlag)
 		if err != nil {
@@ -218,7 +218,7 @@ func ResolveForBranch(repoPath, branch, outFlag string) (*Info, error) {
 
 	var outDir string
 	var err error
-	outDir = filepath.Join(cacheDir, "gfy-out")
+	outDir = filepath.Join(cacheDir, ".gfy-out")
 	if outFlag != "" {
 		outDir, err = filepath.Abs(outFlag)
 		if err != nil {

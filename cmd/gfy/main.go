@@ -261,7 +261,7 @@ func main() {
 		"override tracking branch (e.g., main, develop)")
 	rootCmd.AddCommand(diffCmd)
 
-	rootCmd.PersistentFlags().StringVarP(&outFlag, "out", "o", "", "output directory (default: <path>/gfy-out/)")
+	rootCmd.PersistentFlags().StringVarP(&outFlag, "out", "o", "", "output directory (default: <path>/.gfy-out/)")
 
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 
@@ -677,7 +677,7 @@ func runCompare(args []string, branches []string, formatStr string, skipCommunit
 		}
 	}
 
-	// Determine output directory — use the first source's gfy-out/ by default.
+	// Determine output directory — use the first source's .gfy-out/ by default.
 	outDir := outFlag
 	if outDir == "" {
 		base := args[0]
@@ -686,9 +686,9 @@ func runCompare(args []string, branches []string, formatStr string, skipCommunit
 		}
 		absBase, err := filepath.Abs(base)
 		if err == nil {
-			outDir = filepath.Join(absBase, "gfy-out")
+			outDir = filepath.Join(absBase, ".gfy-out")
 		} else {
-			outDir = "gfy-out"
+			outDir = ".gfy-out"
 		}
 	}
 
@@ -917,7 +917,7 @@ func runDiff(args []string, baseOverride string) error {
 	fmt.Print(compare.InterpretResults(result))
 
 	// Write report.
-	outDir := filepath.Join(absRepo, "gfy-out")
+	outDir := filepath.Join(absRepo, ".gfy-out")
 	if outFlag != "" {
 		outDir, _ = filepath.Abs(outFlag)
 	}
@@ -993,7 +993,7 @@ func openBrowser(url string) error {
 
 // loadOrBuildGraph accepts either a .json file path or a directory.
 // If a .json file, loads it directly. If a directory, looks for
-// <dir>/gfy-out/graph.json — building the graph first if it doesn't exist.
+// <dir>/.gfy-out/graph.json — building the graph first if it doesn't exist.
 func loadOrBuildGraph(pathArg string) (*graph.Graph, error) {
 	absPath, _ := filepath.Abs(pathArg)
 

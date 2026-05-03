@@ -130,7 +130,7 @@ func (s *liveState) rebuild(rootPath string) {
 	communities := cluster.Cluster(g)
 
 	// Also write to disk.
-	outDir := filepath.Join(rootPath, "gfy-out")
+	outDir := filepath.Join(rootPath, ".gfy-out")
 	os.MkdirAll(outDir, 0o755)
 	export.ToJSON(g, filepath.Join(outDir, "graph.json"), true)
 

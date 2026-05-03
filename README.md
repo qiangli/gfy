@@ -26,8 +26,8 @@ make build
 # Build a knowledge graph from any codebase
 gfy build .
 
-# Output lands in gfy-out/
-ls gfy-out/
+# Output lands in .gfy-out/
+ls .gfy-out/
 #  GRAPH_REPORT.md   graph.json   graph.html
 ```
 
@@ -143,7 +143,7 @@ Tags: `throws`, `catches`, `logs`, `fs`, `net`, `exec`, `async`, `unsafe`, `test
 Starts an [MCP](https://modelcontextprotocol.io/) stdio server exposing the graph for AI assistants.
 
 ```bash
-gfy serve gfy-out/graph.json
+gfy serve .gfy-out/graph.json
 ```
 
 **MCP tools:** `query_graph`, `get_node`, `get_neighbors`, `get_community`, `god_nodes`, `graph_stats`, `shortest_path`
@@ -153,8 +153,8 @@ gfy serve gfy-out/graph.json
 Search the graph by keyword with fuzzy matching, diacritics normalization, and degree-weighted ranking.
 
 ```bash
-gfy query gfy-out/graph.json "authentication"
-gfy query gfy-out/graph.json "servr"   # typo-tolerant
+gfy query .gfy-out/graph.json "authentication"
+gfy query .gfy-out/graph.json "servr"   # typo-tolerant
 ```
 
 ### path
@@ -162,7 +162,7 @@ gfy query gfy-out/graph.json "servr"   # typo-tolerant
 Find the shortest path between two nodes.
 
 ```bash
-gfy path gfy-out/graph.json "Server" "Database"
+gfy path .gfy-out/graph.json "Server" "Database"
 ```
 
 ### watch
@@ -199,7 +199,7 @@ Every relationship is tagged with confidence: `EXTRACTED` (from AST), `INFERRED`
 ## Output
 
 ```
-gfy-out/
+.gfy-out/
 ├── GRAPH_REPORT.md    # god nodes, surprising connections, community structure
 ├── graph.json         # queryable graph (NetworkX-compatible)
 ├── graph.html         # interactive visualization (open in browser)

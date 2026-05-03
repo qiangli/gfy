@@ -82,7 +82,7 @@ type cacheEntry struct {
 
 // cachePath returns the path for a cached entry.
 func cachePath(root, kind, hash string) string {
-	return filepath.Join(root, "gfy-out", "cache", kind, hash+".json")
+	return filepath.Join(root, ".gfy-out", "cache", kind, hash+".json")
 }
 
 // Load retrieves a cached extraction result if the file hash matches.
@@ -139,6 +139,6 @@ type cacheEntryRef struct {
 
 // Clear removes all cached entries.
 func Clear(root string) error {
-	dir := filepath.Join(root, "gfy-out", "cache")
+	dir := filepath.Join(root, ".gfy-out", "cache")
 	return os.RemoveAll(dir)
 }

@@ -30,4 +30,4 @@ diff: build ## Compare local working tree against remote tracking branch
 
 clean: ## Remove build artifacts
 	rm -f $(BINARY)
-	rm -rf gfy-out
+	rm -rf .gfy-out
