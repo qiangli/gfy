@@ -369,6 +369,14 @@ func Compare(a, b *graph.Graph, labelA, labelB string, opts Options) *Result {
 	progress("Computing composite score...")
 	r.Summary.CompositeScore = ComputeComposite(r.Similarity, opts.Weights)
 
+	// If there are zero structural changes, the codebases are identical.
+	// Clamp to 1.0 since community detection non-determinism can produce < 1.0.
+	if r.Summary.NodesAdded == 0 && r.Summary.NodesRemoved == 0 &&
+		r.Summary.NodesModified == 0 && r.Summary.EdgesAdded == 0 &&
+		r.Summary.EdgesRemoved == 0 && r.Summary.EdgesModified == 0 {
+		r.Summary.CompositeScore = 1.0
+	}
+
 	return r
 }
 
