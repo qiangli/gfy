@@ -212,7 +212,7 @@ func registerNavigationTools(server *mcp.Server, g *graph.Graph, children, paren
 
 	// list_leaves: nodes with no containment children
 	type listLeavesArgs struct {
-		Tag string `json:"tag,omitempty" jsonschema:"filter by behavioral tag (throws, logs, fs, net, exec, async, unsafe, test, catches)"`
+		Tag string `json:"tag,omitempty" jsonschema:"filter by behavioral tag (throws, logs, fs, net, exec, async, unsafe, test, catches, otel)"`
 	}
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "list_leaves",
@@ -489,13 +489,13 @@ func registerAnalysisTools(server *mcp.Server, g *graph.Graph, communities map[i
 
 	// trace_calls
 	type traceCallsArgs struct {
-		Tag        string `json:"tag" jsonschema:"behavioral tag: throws catches logs fs net exec async unsafe test"`
+		Tag        string `json:"tag" jsonschema:"behavioral tag: throws catches logs fs net exec async unsafe test otel"`
 		MaxDepth   int    `json:"max_depth,omitempty" jsonschema:"max call chain depth (default 10)"`
 		MaxResults int    `json:"max_results,omitempty" jsonschema:"max chains to return (default 20)"`
 	}
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "trace_calls",
-		Description: "Trace call chains leading to functions with a behavioral tag (throws, logs, fs, net, exec, async, unsafe, test, catches)",
+		Description: "Trace call chains leading to functions with a behavioral tag (throws, logs, fs, net, exec, async, unsafe, test, catches, otel)",
 	}, func(ctx context.Context, req *mcp.CallToolRequest, args traceCallsArgs) (*mcp.CallToolResult, any, error) {
 		chains := trace.TraceTag(g, args.Tag, args.MaxDepth, args.MaxResults)
 		if len(chains) == 0 {

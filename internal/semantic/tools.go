@@ -162,7 +162,7 @@ func NewASTTools(result *types.ExtractionResult) []ASTTool {
 		},
 		{
 			Name:        "search_by_tag",
-			Description: "Find nodes by behavioral tag. Tags: throws, logs, fs, net, exec, async, unsafe, test, catches, comment.",
+			Description: "Find nodes by behavioral tag. Tags: throws, logs, fs, net, exec, async, unsafe, test, catches, otel, comment.",
 			Parameters: map[string]ToolParam{
 				"tag": {Type: "string", Description: "The tag to search for (e.g., 'throws', 'logs', 'fs')"},
 			},

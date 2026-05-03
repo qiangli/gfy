@@ -25,6 +25,11 @@ var goFSFuncs = map[string]bool{
 	"MkdirAll": true, "Rename": true, "Stat": true, "ReadDir": true,
 }
 var goNetPackages = map[string]bool{"http": true, "net": true, "rpc": true, "grpc": true}
+var goOtelPackages = map[string]bool{
+	"otel": true, "metric": true,
+	"prometheus": true, "promauto": true,
+	"statsd": true,
+}
 
 // ExtractGo extracts functions, methods, type declarations, and imports from a .go file.
 func ExtractGo(path string) *types.ExtractionResult {
@@ -269,6 +274,9 @@ func ExtractGo(path string) *types.ExtractionResult {
 				}
 				if goNetPackages[operandName] {
 					TagNode(nodes, callerNID, "net")
+				}
+				if goOtelPackages[operandName] {
+					TagNode(nodes, callerNID, "otel")
 				}
 			}
 

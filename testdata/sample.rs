@@ -25,3 +25,7 @@ fn build_graph(edges: Vec<(String, String)>) -> Graph {
     }
     g
 }
+
+fn instrument() {
+    let _span = info_span!("my_operation");
+}

@@ -73,6 +73,8 @@ type BehaviorConfig struct {
 	FSCallNames     []string // Bare function calls for file system access (e.g., "fopen")
 	FSObjects       []string // Object prefixes for FS access (e.g., "File.")
 	NetObjects      []string // Object prefixes for network access (e.g., "HttpClient.")
+	OtelCallNames   []string // Bare function calls for observability (e.g., "Counter", "Gauge")
+	OtelObjects     []string // Object prefixes for observability (e.g., "Tracer.", "prometheus.")
 	AsyncNodeTypes  []string // Node types indicating async (e.g., "await_expression")
 	UnsafeNodeTypes []string // Node types indicating unsafe code (e.g., "unsafe_block")
 }

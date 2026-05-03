@@ -77,11 +77,11 @@ The `internal/compare/` package provides pairwise and N-way graph comparison wit
 - **`detect/`** — File classification (code, document, paper). Detects sensitive files (credentials, keys) and skips them. Respects `.gfyignore`.
 - **`semantic/`** — LLM-powered extraction from non-code files (docs, papers) via Ollama. Per-file SHA256-based caching. Merges concepts/rationale into the AST graph.
 - **`cache/`** — SHA256-based file hashing with streaming. JSON-encoded cache entries in `.cache/` subdirectories. Per-stage caching (extraction, semantic).
-- **`trace/`** — Backward BFS call graph tracing from tagged nodes. Tags: throws, logs, fs, net, exec, async, unsafe, test, catches.
+- **`trace/`** — Backward BFS call graph tracing from tagged nodes. Tags: throws, logs, fs, net, exec, async, unsafe, test, catches, otel.
 - **`search/`** — Fuzzy matching (Levenshtein ≤2) with scoring: exact (+10), prefix (+5), contains (+2), degree-weighted tiebreaker.
 - **`export/`** — JSON (NetworkX format), GraphML (Gephi/Cytoscape), Cypher (Neo4j), Obsidian (markdown with wikilinks)
 - **`validate/`** — ExtractionResult schema validation (node/edge IDs, required fields, confidence levels)
-- **`serve/`** — MCP stdio server (12 tools via modelcontextprotocol/go-sdk)
+- **`serve/`** — MCP stdio server (15 tools via modelcontextprotocol/go-sdk)
 - **`watch/`** — File watching with fsnotify, auto-rebuild. Web UI uses vis-network (vis.js) for force-directed graph visualization, SSE for live reload. HTML is embedded as a constant string (no template files).
 - **`source/`** — Source resolution: local directories, archives (.zip/.tar/.tgz), git URLs. Caches clones under `~/.gfy/`.
 

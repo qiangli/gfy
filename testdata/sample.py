@@ -14,3 +14,7 @@ class Dog(Animal):
 
 def create_dog(name):
     return Dog(name)
+
+def instrument():
+    tracer.start_span("operation")
+    Counter("requests_total")

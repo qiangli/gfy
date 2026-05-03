@@ -3,6 +3,8 @@ package sample
 import (
 	"fmt"
 	"strings"
+
+	"go.opentelemetry.io/otel"
 )
 
 type Server struct {
@@ -29,4 +31,9 @@ func (s *Server) validate() {
 func Helper() {
 	s := NewServer("test")
 	s.Start()
+}
+
+func Instrument() {
+	tracer := otel.Tracer("my-service")
+	_ = tracer
 }

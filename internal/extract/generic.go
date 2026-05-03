@@ -263,6 +263,12 @@ func ExtractGeneric(path string, config *LanguageConfig) *types.ExtractionResult
 						break
 					}
 				}
+				for _, name := range bc.OtelCallNames {
+					if calleeName == name && !isMemberCall {
+						TagNode(nodes, callerNID, "otel")
+						break
+					}
+				}
 				if isMemberCall {
 					funcNode := node.ChildByFieldName(config.CallFunctionField, lang)
 					if funcNode != nil {
@@ -273,6 +279,7 @@ func ExtractGeneric(path string, config *LanguageConfig) *types.ExtractionResult
 						})
 						matchObjectPrefix(raw, bc.FSObjects, func() { TagNode(nodes, callerNID, "fs") })
 						matchObjectPrefix(raw, bc.NetObjects, func() { TagNode(nodes, callerNID, "net") })
+						matchObjectPrefix(raw, bc.OtelObjects, func() { TagNode(nodes, callerNID, "otel") })
 					}
 				}
 			}

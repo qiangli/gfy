@@ -272,6 +272,11 @@ func extractJSWith(path string, lang *ts.Language) *types.ExtractionResult {
 						if objName == "child_process" || objName == "cp" {
 							TagNode(nodes, callerNID, "exec")
 						}
+						if objName == "tracer" || objName == "meter" || objName == "metrics" ||
+							objName == "trace" || objName == "dd" || objName == "ddTrace" ||
+							objName == "statsd" || objName == "promClient" || objName == "prometheus" {
+							TagNode(nodes, callerNID, "otel")
+						}
 					}
 				}
 			}

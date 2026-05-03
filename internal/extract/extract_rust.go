@@ -163,6 +163,8 @@ func ExtractRust(path string) *types.ExtractionResult {
 			case "println", "eprintln", "print", "eprint",
 				"log", "info", "warn", "error", "debug", "trace":
 				TagNode(nodes, callerNID, "logs")
+			case "info_span", "debug_span", "warn_span", "error_span", "trace_span", "instrument":
+				TagNode(nodes, callerNID, "otel")
 			}
 		}
 
@@ -197,6 +199,13 @@ func ExtractRust(path string) *types.ExtractionResult {
 					if nameNode != nil {
 						calleeName = rdText(nameNode)
 					}
+				}
+			}
+			if funcNode != nil {
+				fullPath := rdText(funcNode)
+				if strings.Contains(fullPath, "opentelemetry") || strings.Contains(fullPath, "prometheus") ||
+					strings.Contains(fullPath, "tracing::") {
+					TagNode(nodes, callerNID, "otel")
 				}
 			}
 			if calleeName != "" {

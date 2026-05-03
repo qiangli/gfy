@@ -30,6 +30,15 @@ var pyNetObjects = map[string]bool{
 	"requests": true, "urllib": true, "httpx": true, "aiohttp": true,
 	"socket": true, "http": true, "urllib3": true,
 }
+var pyOtelObjects = map[string]bool{
+	"tracer": true, "meter": true, "metrics": true,
+	"opentelemetry": true,
+	"ddtrace": true, "statsd": true,
+	"prometheus_client": true,
+}
+var pyOtelFuncs = map[string]bool{
+	"Counter": true, "Gauge": true, "Histogram": true, "Summary": true,
+}
 
 // ExtractPython extracts classes, functions, imports, and call graphs from a .py file.
 func ExtractPython(path string) *types.ExtractionResult {
@@ -278,6 +287,9 @@ func ExtractPython(path string) *types.ExtractionResult {
 					if pyExecFuncs[calleeName] {
 						TagNode(nodes, callerNID, "exec")
 					}
+					if pyOtelFuncs[calleeName] {
+						TagNode(nodes, callerNID, "otel")
+					}
 				case "attribute":
 					isMemberCall = true
 					attr := funcNode.ChildByFieldName("attribute", lang)
@@ -299,6 +311,9 @@ func ExtractPython(path string) *types.ExtractionResult {
 						}
 						if objName == "subprocess" {
 							TagNode(nodes, callerNID, "exec")
+						}
+						if pyOtelObjects[objName] {
+							TagNode(nodes, callerNID, "otel")
 						}
 					}
 				}

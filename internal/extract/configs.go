@@ -516,6 +516,7 @@ func JavaConfig() *LanguageConfig {
 			FSObjects:      []string{"File.", "Files.", "FileReader.", "FileWriter.", "BufferedReader.", "BufferedWriter."},
 			NetObjects:     []string{"HttpClient.", "URL.", "Socket.", "HttpURLConnection."},
 			ExecCallNames:  []string{"exec"},
+			OtelObjects:    []string{"Tracer.", "Span.", "SpanBuilder.", "Meter.", "LongCounter.", "DoubleCounter.", "GlobalOpenTelemetry.", "OpenTelemetry.", "MeterRegistry.", "GlobalTracer."},
 		},
 	}
 }
@@ -570,6 +571,7 @@ func CppConfig() *LanguageConfig {
 			LogObjects:     []string{"std::cout", "std::cerr", "std::clog"},
 			ExecCallNames:  []string{"system", "popen", "execl", "execv"},
 			FSCallNames:    []string{"fopen", "fclose", "fread", "fwrite", "remove", "rename"},
+			OtelObjects:    []string{"opentelemetry::", "prometheus::"},
 		},
 	}
 }
@@ -595,6 +597,7 @@ func RubyConfig() *LanguageConfig {
 			ThrowCallNames: []string{"raise", "fail"},
 			LogCallNames:   []string{"puts", "p", "pp", "warn"},
 			LogObjects:     []string{"logger.", "Logger.", "Rails.logger."},
+			OtelObjects:    []string{"OpenTelemetry.", "Prometheus::"},
 		},
 	}
 }
@@ -626,6 +629,7 @@ func CSharpConfig() *LanguageConfig {
 			ExecCallNames:   []string{"Start"},
 			FSObjects:       []string{"File.", "Directory.", "Path.", "StreamReader.", "StreamWriter."},
 			NetObjects:      []string{"HttpClient.", "WebClient.", "TcpClient.", "WebRequest."},
+			OtelObjects:     []string{"ActivitySource.", "Activity.", "DiagnosticSource.", "Meter.", "Tracer."},
 			AsyncNodeTypes:  []string{"await_expression"},
 			UnsafeNodeTypes: []string{"unsafe_statement"},
 		},
@@ -656,6 +660,7 @@ func KotlinConfig() *LanguageConfig {
 			LogObjects:     []string{"Log.", "logger.", "Logger."},
 			FSObjects:      []string{"File(", "Files."},
 			NetObjects:     []string{"HttpClient.", "URL(", "OkHttpClient."},
+			OtelObjects:    []string{"OpenTelemetry.", "Tracer.", "Span.", "Meter.", "MeterRegistry.", "Counter.", "Timer."},
 		},
 	}
 }
@@ -683,6 +688,7 @@ func ScalaConfig() *LanguageConfig {
 			CatchNodeTypes: []string{"catch_clause"},
 			LogCallNames:   []string{"println", "print"},
 			LogObjects:     []string{"logger.", "Logger.", "log."},
+			OtelObjects:    []string{"Tracer.", "Span.", "Meter.", "kamon.", "Kamon."},
 		},
 	}
 }
@@ -713,6 +719,7 @@ func PHPConfig() *LanguageConfig {
 			ExecCallNames:  []string{"exec", "shell_exec", "system", "passthru", "popen", "proc_open"},
 			FSCallNames:    []string{"fopen", "fclose", "fread", "fwrite", "file_get_contents", "file_put_contents", "unlink", "mkdir"},
 			NetObjects:     []string{"$client->", "$http->"},
+			OtelObjects:    []string{"$tracer->", "$meter->", "$span->"},
 		},
 	}
 }
@@ -767,6 +774,7 @@ func SwiftConfig() *LanguageConfig {
 			LogObjects:     []string{"Logger.", "logger.", "os_log."},
 			FSObjects:      []string{"FileManager.", "FileHandle."},
 			NetObjects:     []string{"URLSession.", "URLRequest."},
+			OtelObjects:    []string{"OTel.", "Tracer.", "Span.", "Meter."},
 			AsyncNodeTypes: []string{"await_expression"},
 		},
 	}

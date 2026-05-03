@@ -111,6 +111,69 @@ func TestExtractPython(t *testing.T) {
 	}
 }
 
+func TestOtelTagGo(t *testing.T) {
+	path := filepath.Join(testdataDir(), "sample.go")
+	result := ExtractGo(path)
+	if result.Error != "" {
+		t.Fatalf("extraction error: %s", result.Error)
+	}
+	found := false
+	for _, n := range result.Nodes {
+		if n.Label == "Instrument()" {
+			for _, tag := range n.Tags {
+				if tag == "otel" {
+					found = true
+				}
+			}
+		}
+	}
+	if !found {
+		t.Error("expected 'otel' tag on Instrument()")
+	}
+}
+
+func TestOtelTagPython(t *testing.T) {
+	path := filepath.Join(testdataDir(), "sample.py")
+	result := ExtractPython(path)
+	if result.Error != "" {
+		t.Fatalf("extraction error: %s", result.Error)
+	}
+	found := false
+	for _, n := range result.Nodes {
+		if n.Label == "instrument()" {
+			for _, tag := range n.Tags {
+				if tag == "otel" {
+					found = true
+				}
+			}
+		}
+	}
+	if !found {
+		t.Error("expected 'otel' tag on instrument()")
+	}
+}
+
+func TestOtelTagRust(t *testing.T) {
+	path := filepath.Join(testdataDir(), "sample.rs")
+	result := ExtractRust(path)
+	if result.Error != "" {
+		t.Fatalf("extraction error: %s", result.Error)
+	}
+	found := false
+	for _, n := range result.Nodes {
+		if n.Label == "instrument()" {
+			for _, tag := range n.Tags {
+				if tag == "otel" {
+					found = true
+				}
+			}
+		}
+	}
+	if !found {
+		t.Error("expected 'otel' tag on instrument()")
+	}
+}
+
 func TestMakeID(t *testing.T) {
 	tests := []struct {
 		parts []string
