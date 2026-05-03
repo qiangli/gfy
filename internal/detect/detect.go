@@ -109,8 +109,8 @@ type ignorePattern struct {
 
 // ignoreStack tracks ignore patterns encountered during directory traversal.
 // Patterns from parent directories apply to all descendants. When entering a
-// directory that contains .gitignore or .graphifyignore, those patterns are
-// pushed onto the stack. .graphifyignore patterns are loaded after .gitignore
+// directory that contains .gitignore or .gfyignore, those patterns are
+// pushed onto the stack. .gfyignore patterns are loaded after .gitignore
 // at each level so they can override with !pattern negations.
 type ignoreStack struct {
 	root     string
@@ -126,7 +126,7 @@ func newIgnoreStack(root string) *ignoreStack {
 	return s
 }
 
-// loadAncestors loads .gitignore/.graphifyignore from directories above root,
+// loadAncestors loads .gitignore/.gfyignore from directories above root,
 // up to (and including) the nearest .git root.
 //
 // Only patterns from the root's OWN .git repository are loaded. Ancestor
@@ -159,10 +159,10 @@ func (s *ignoreStack) loadAncestors(root string) {
 	}
 }
 
-// loadDir reads .gitignore and .graphifyignore from a single directory.
-// .gitignore is loaded first, then .graphifyignore so it can override.
+// loadDir reads .gitignore and .gfyignore from a single directory.
+// .gitignore is loaded first, then .gfyignore so it can override.
 func (s *ignoreStack) loadDir(dir string) {
-	for _, name := range []string{".gitignore", ".graphifyignore"} {
+	for _, name := range []string{".gitignore", ".gfyignore"} {
 		source := strings.TrimPrefix(name, ".")
 		data, err := os.ReadFile(filepath.Join(dir, name))
 		if err != nil {
@@ -176,7 +176,7 @@ func (s *ignoreStack) loadDir(dir string) {
 			}
 			negate := false
 			if strings.HasPrefix(line, "!") {
-				// Only .graphifyignore supports negation (re-include).
+				// Only .gfyignore supports negation (re-include).
 				if source == "gitignore" {
 					continue
 				}
@@ -195,7 +195,7 @@ func (s *ignoreStack) loadDir(dir string) {
 
 // isIgnored checks if a path is excluded by the accumulated ignore patterns.
 // Patterns are evaluated in order. A later negation pattern (!pattern)
-// from .graphifyignore can re-include a path excluded by .gitignore.
+// from .gfyignore can re-include a path excluded by .gitignore.
 func (s *ignoreStack) isIgnored(path string) bool {
 	ignored := false
 	basename := filepath.Base(path)
@@ -267,8 +267,8 @@ func countWords(path string) int {
 }
 
 // Detect walks a directory tree and classifies all files.
-// It respects .gitignore and .graphifyignore files in every directory,
-// not just the root. .graphifyignore has higher priority and can use
+// It respects .gitignore and .gfyignore files in every directory,
+// not just the root. .gfyignore has higher priority and can use
 // !pattern to re-include files excluded by .gitignore.
 func Detect(root string, followSymlinks bool) *types.DetectionResult {
 	root, _ = filepath.Abs(root)
@@ -300,7 +300,7 @@ func Detect(root string, followSymlinks bool) *types.DetectionResult {
 				if ignore.isIgnored(path) {
 					return filepath.SkipDir
 				}
-				// Load .gitignore/.graphifyignore from this subdirectory
+				// Load .gitignore/.gfyignore from this subdirectory
 				// so its patterns apply to descendants.
 				ignore.loadDir(path)
 			}

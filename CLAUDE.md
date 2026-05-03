@@ -73,7 +73,7 @@ The `internal/compare/` package provides pairwise and N-way graph comparison wit
 - **`cluster/`** — Louvain community detection and cohesion scoring
 - **`analyze/`** — God nodes (most-connected entities), surprising connections (cross-community edges), suggested questions
 - **`report/`** — Generates `GRAPH_REPORT.md` with god nodes, surprising connections, community cohesion scores
-- **`detect/`** — File classification (code, document, paper). Detects sensitive files (credentials, keys) and skips them. Respects `.graphifyignore`.
+- **`detect/`** — File classification (code, document, paper). Detects sensitive files (credentials, keys) and skips them. Respects `.gfyignore`.
 - **`semantic/`** — LLM-powered extraction from non-code files (docs, papers) via Ollama. Per-file SHA256-based caching. Merges concepts/rationale into the AST graph.
 - **`cache/`** — SHA256-based file hashing with streaming. JSON-encoded cache entries in `.cache/` subdirectories. Per-stage caching (extraction, semantic).
 - **`trace/`** — Backward BFS call graph tracing from tagged nodes. Tags: throws, logs, fs, net, exec, async, unsafe, test, catches.

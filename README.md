@@ -174,7 +174,7 @@ Plus Vue, Svelte (via JS extractor) and Blade templates (regex).
 detect → extract → build → cluster → analyze → report → export
 ```
 
-1. **Detect** — Walk the filesystem, classify files (code, document, paper, image, video), respect `.graphifyignore`
+1. **Detect** — Walk the filesystem, classify files (code, document, paper, image, video), respect `.gfyignore`
 2. **Extract** — Parse code with [tree-sitter](https://tree-sitter.github.io/) (via [gotreesitter](https://github.com/odvcencio/gotreesitter)) to extract classes, functions, imports, call graphs
 3. **Build** — Assemble extracted nodes and edges into a graph with ID normalization and deduplication
 4. **Cluster** — Detect communities using the Louvain algorithm
