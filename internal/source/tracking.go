@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 )
 
 // TrackingInfo holds the current branch and its remote tracking branch.
@@ -56,16 +57,42 @@ func DetectTracking(repoPath string) (*TrackingInfo, error) {
 	}
 
 	branchCfg, exists := cfg.Branches[localBranch]
-	if !exists || branchCfg.Remote == "" {
-		return nil, fmt.Errorf("branch %q has no upstream configured; use --base or run: git branch --set-upstream-to=origin/%s", localBranch, localBranch)
+	if exists && branchCfg.Remote != "" {
+		// Explicit upstream configured.
+		remoteName := branchCfg.Remote
+		remoteBranch := branchCfg.Merge.Short()
+
+		remoteCfg, exists := cfg.Remotes[remoteName]
+		if !exists || len(remoteCfg.URLs) == 0 {
+			return nil, fmt.Errorf("remote %q not configured in git config", remoteName)
+		}
+
+		return &TrackingInfo{
+			LocalBranch:  localBranch,
+			Remote:       remoteName,
+			RemoteBranch: remoteBranch,
+			RemoteURL:    remoteCfg.URLs[0],
+		}, nil
 	}
 
-	remoteName := branchCfg.Remote
-	remoteBranch := branchCfg.Merge.Short()
-
+	// No explicit upstream: fall back to "origin" remote with the same branch name,
+	// or try common default branch names (main, master).
+	remoteName := "origin"
 	remoteCfg, exists := cfg.Remotes[remoteName]
 	if !exists || len(remoteCfg.URLs) == 0 {
-		return nil, fmt.Errorf("remote %q not configured in git config", remoteName)
+		return nil, fmt.Errorf("no upstream configured and no 'origin' remote found; use --base to specify branch")
+	}
+
+	// Try the current branch name first, then common defaults.
+	remoteBranch := localBranch
+	candidates := []string{localBranch, "main", "master"}
+	for _, candidate := range candidates {
+		// Check if the remote ref exists locally.
+		refName := fmt.Sprintf("refs/remotes/%s/%s", remoteName, candidate)
+		if _, err := repo.Reference(plumbing.ReferenceName(refName), true); err == nil {
+			remoteBranch = candidate
+			break
+		}
 	}
 
 	return &TrackingInfo{
