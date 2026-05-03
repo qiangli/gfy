@@ -88,6 +88,7 @@ The `internal/compare/` package provides pairwise and N-way graph comparison wit
 
 - **`build`** (default) — Run the full pipeline. Flags: `--no-cache`, `--no-semantic`, `--model`, `--ollama-url`, `--view`
 - **`compare`** — Compare 2+ codebases or branches. Flags: `--normalize`, `--sensitivity`, `--branch`, `--skip-trees`, `--skip-communities`, `--estimate`, `--rename-threshold`
+- **`diff`** — Compare local working tree against remote tracking branch. Auto-detects upstream via go-git. Flags: `--base`
 - **`trace`** — Find behavioral call chains by tag (e.g., `gfy trace --tag throws`)
 - **`view`** — Open `graph.html` in the default browser
 - **`query`** — Fuzzy search the graph by keyword

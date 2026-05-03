@@ -40,6 +40,8 @@ gfy build [path]                           # build knowledge graph
 gfy build --format json,html,obsidian .    # choose export formats
 gfy compare [path1] [path2]                # compare two codebases
 gfy compare --normalize --sensitivity 0.7 [path1] [path2]  # cross-project similarity
+gfy diff                                   # compare local vs remote tracking branch
+gfy diff --base main                       # compare local vs origin/main
 gfy query [path] "search terms"            # search the graph (fuzzy)
 gfy path  [path] [source] [target]         # find shortest path
 gfy trace [path] --tag throws              # trace behavioral call chains
@@ -114,6 +116,16 @@ gfy compare --skip-trees --skip-communities ./v1 ./v2
 
 - `--normalize` — Align nodes by structural fingerprint (Weisfeiler-Lehman) instead of ID
 - `--sensitivity` (0-1) — How aggressively to look through renames/refactors for intrinsic similarity. At higher values: uses semantic AHU hashing (NodeType + behavioral tags), cross-project weights (zeroes useless Jaccard), and more permissive alignment thresholds
+
+### diff
+
+Compare your local working tree's knowledge graph against the remote tracking branch. Auto-detects the upstream branch via go-git (no system `git` required).
+
+```bash
+gfy diff                              # auto-detect tracking branch
+gfy diff --base main                  # compare against origin/main
+gfy diff ./myrepo                     # run on a different repo
+```
 
 ### trace
 
