@@ -13,7 +13,7 @@ func makeTestResult() *types.ExtractionResult {
 			{ID: "auth_validate", Label: "validateToken", FileType: "code",
 				SourceFile: "internal/auth/service.go", SourceLocation: "L42",
 				Comment: "checks authentication credentials",
-				Tags: []string{"throws"}, ThrowMessages: []string{"invalid token"}},
+				Tags:    []string{"throws"}, ThrowMessages: []string{"invalid token"}},
 			{ID: "auth_login", Label: "login", FileType: "code",
 				SourceFile: "internal/auth/service.go", SourceLocation: "L10",
 				LogMessages: []string{"user logged in"}},
@@ -22,7 +22,7 @@ func makeTestResult() *types.ExtractionResult {
 				Comment: "executes database query"},
 			{ID: "http_handler", Label: "handleRequest", FileType: "code",
 				SourceFile: "internal/http/server.go",
-				Comment: "processes incoming HTTP requests"},
+				Comment:    "processes incoming HTTP requests"},
 		},
 		Edges: []types.Edge{
 			{Source: "auth_login", Target: "auth_validate", Relation: "calls",

@@ -34,13 +34,13 @@ import (
 )
 
 var (
-	version    = "dev"
-	formats    string
-	noSemantic bool
-	noCache    bool
-	model      string
-	ollamaURL  string
-	outFlag    string
+	version        = "dev"
+	formats        string
+	noSemantic     bool
+	noCache        bool
+	model          string
+	ollamaURL      string
+	outFlag        string
 	viewAfterBuild bool
 )
 
@@ -656,10 +656,23 @@ func runCompare(args []string, branches []string, formatStr string, skipCommunit
 		}
 	}
 
-	// Determine output directory.
+	// Determine output directory — use the first source's gfy-out/ by default.
 	outDir := outFlag
 	if outDir == "" {
-		outDir = "."
+		base := args[0]
+		if len(branches) > 0 {
+			base = args[0]
+		}
+		absBase, err := filepath.Abs(base)
+		if err == nil {
+			outDir = filepath.Join(absBase, "gfy-out")
+		} else {
+			outDir = "gfy-out"
+		}
+	}
+
+	if err := os.MkdirAll(outDir, 0o755); err != nil {
+		return fmt.Errorf("create output directory: %w", err)
 	}
 
 	if len(graphs) == 2 {

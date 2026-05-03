@@ -192,9 +192,9 @@ func TestCosineSimilarity(t *testing.T) {
 func TestFindTopMatches(t *testing.T) {
 	// Build a small corpus.
 	docs := [][]string{
-		{"auth", "token", "validate", "credential"},     // 0: auth validator
-		{"auth", "session", "create", "user"},            // 1: session creator
-		{"database", "query", "execute", "transaction"},  // 2: db executor
+		{"auth", "token", "validate", "credential"},       // 0: auth validator
+		{"auth", "session", "create", "user"},             // 1: session creator
+		{"database", "query", "execute", "transaction"},   // 2: db executor
 		{"auth", "error", "handle", "credential", "fail"}, // 3: auth error handler
 	}
 	idx := newTFIDF(docs)

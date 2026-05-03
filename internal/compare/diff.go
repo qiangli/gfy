@@ -248,4 +248,3 @@ func attrEqual(a, b any) bool {
 	}
 	return fmt.Sprint(a) == fmt.Sprint(b)
 }
-

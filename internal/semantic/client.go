@@ -158,7 +158,7 @@ type chatRequest struct {
 type chatMessage struct {
 	Role       string     `json:"role"`
 	Content    string     `json:"content"`
-	ToolCalls  []toolCall `json:"tool_calls,omitempty"`  // present in assistant responses
+	ToolCalls  []toolCall `json:"tool_calls,omitempty"`   // present in assistant responses
 	ToolCallID string     `json:"tool_call_id,omitempty"` // present in tool result messages
 }
 
@@ -190,9 +190,9 @@ type toolFunction struct {
 }
 
 type toolParamSchema struct {
-	Type       string                `json:"type"` // "object"
+	Type       string                 `json:"type"` // "object"
 	Properties map[string]toolPropDef `json:"properties"`
-	Required   []string              `json:"required,omitempty"`
+	Required   []string               `json:"required,omitempty"`
 }
 
 type toolPropDef struct {

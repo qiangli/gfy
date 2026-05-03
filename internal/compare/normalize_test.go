@@ -227,9 +227,9 @@ func TestCompareWithNormalize(t *testing.T) {
 
 	// With normalize: should see much higher similarity.
 	resultNorm := Compare(a, b, "v1", "v2", Options{
-		SkipCommunities: true,
-		SkipImpact:      true,
-		Normalize:       true,
+		SkipCommunities:  true,
+		SkipImpact:       true,
+		Normalize:        true,
 		NormalizeOptions: NormalizeOptions{MinMatchScore: 0.3},
 	})
 	t.Logf("With normalize: Jaccard=%.2f, added=%d, removed=%d, matched=%d",

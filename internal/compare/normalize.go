@@ -53,10 +53,10 @@ type AlignmentResult struct {
 	UnmatchedB []string
 
 	// Statistics.
-	MatchedCount   int
+	MatchedCount    int
 	UnmatchedACount int
 	UnmatchedBCount int
-	AvgScore       float64
+	AvgScore        float64
 }
 
 // NormalizeOptions configures the normalization/alignment behavior.
@@ -450,7 +450,6 @@ func inferNodeType(label string, inEdges, outEdges []dirEdge) string {
 
 	return "entity"
 }
-
 
 // buildContainerChain follows incoming "contains" and "method" edges upward
 // to build a containment path.

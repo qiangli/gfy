@@ -55,7 +55,7 @@ func detectRenames(a, b *graph.Graph, removed, added []NodeInfo, threshold float
 				OldLabel:        old.Label,
 				NewID:           neu.ID,
 				NewLabel:        neu.Label,
-				EditDistance:     dist,
+				EditDistance:    dist,
 				NeighborOverlap: neighborOverlap,
 				Confidence:      confidence,
 			})

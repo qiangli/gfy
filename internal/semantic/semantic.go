@@ -14,9 +14,9 @@ import (
 
 // Options configures semantic extraction.
 type Options struct {
-	BaseURL     string                 // Ollama server URL (default: http://localhost:11434)
-	Model       string                 // Model name (e.g., qwen3:8b)
-	CodeSummary string                 // Node directory text (from ExtractNodeDirectory)
+	BaseURL     string                  // Ollama server URL (default: http://localhost:11434)
+	Model       string                  // Model name (e.g., qwen3:8b)
+	CodeSummary string                  // Node directory text (from ExtractNodeDirectory)
 	ASTNodes    *types.ExtractionResult // AST extraction result for tool-use queries (nil = no tools)
 }
 
@@ -66,7 +66,7 @@ type llmResult struct {
 		SrcFile  string `json:"f"`
 	} `json:"n"`
 	CompressedEdges []struct {
-		Source     string  `json:"s"`
+		Source    string  `json:"s"`
 		Target    string  `json:"g"`
 		Relation  string  `json:"r"`
 		Conf      string  `json:"c"`

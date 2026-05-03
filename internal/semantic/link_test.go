@@ -13,7 +13,7 @@ func TestLinkSemanticToAST_BasicMatch(t *testing.T) {
 		Nodes: []types.Node{
 			// AST nodes with rich text — the target for matching.
 			{ID: "auth_validatetoken", Label: "validateToken", FileType: "code",
-				Comment: "checks authentication credentials and verifies token validity",
+				Comment:       "checks authentication credentials and verifies token validity",
 				ThrowMessages: []string{"authentication failed", "invalid credentials"}},
 			{ID: "session_start", Label: "Start", FileType: "code",
 				Comment: "initializes user session"},

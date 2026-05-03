@@ -9,10 +9,10 @@ import (
 type EstimatedRange struct {
 	LabelA string  `json:"label_a"`
 	LabelB string  `json:"label_b"`
-	Lower  float64 `json:"lower"`  // lower bound [0, 1]
-	Upper  float64 `json:"upper"`  // upper bound [0, 1]
-	Mid    float64 `json:"mid"`    // midpoint estimate
-	Via    string  `json:"via"`    // which pivot(s) contributed the tightest bound
+	Lower  float64 `json:"lower"` // lower bound [0, 1]
+	Upper  float64 `json:"upper"` // upper bound [0, 1]
+	Mid    float64 `json:"mid"`   // midpoint estimate
+	Via    string  `json:"via"`   // which pivot(s) contributed the tightest bound
 }
 
 // metricScore extracts one of the 10 individual scores from a Result.

@@ -116,9 +116,9 @@ type EdgeInfo struct {
 // EdgeModification records attribute changes for an edge present in both graphs.
 type EdgeModification struct {
 	Source   string            `json:"source"`
-	Target  string            `json:"target"`
-	Relation string           `json:"relation"`
-	Changes map[string][2]any `json:"changes"`
+	Target   string            `json:"target"`
+	Relation string            `json:"relation"`
+	Changes  map[string][2]any `json:"changes"`
 }
 
 // EdgeDiff holds added, removed, and modified edges.
@@ -130,9 +130,9 @@ type EdgeDiff struct {
 
 // SimilarityMetrics holds computed similarity/distance scores.
 type SimilarityMetrics struct {
-	NodeJaccard  float64 `json:"node_jaccard"`   // [0,1] higher = more similar
-	EdgeJaccard  float64 `json:"edge_jaccard"`   // [0,1] higher = more similar
-	DegreeJSD    float64 `json:"degree_jsd"`     // [0,1] lower = more similar
+	NodeJaccard  float64 `json:"node_jaccard"`  // [0,1] higher = more similar
+	EdgeJaccard  float64 `json:"edge_jaccard"`  // [0,1] higher = more similar
+	DegreeJSD    float64 `json:"degree_jsd"`    // [0,1] lower = more similar
 	CommunityNMI float64 `json:"community_nmi"` // [0,1] higher = more similar; -1 if skipped
 
 	TreeScores *TreeScores `json:"tree_scores,omitempty"` // 6 tree comparison scores
@@ -172,7 +172,7 @@ type RenameCandidate struct {
 	OldLabel        string  `json:"old_label"`
 	NewID           string  `json:"new_id"`
 	NewLabel        string  `json:"new_label"`
-	EditDistance     int     `json:"edit_distance"`
+	EditDistance    int     `json:"edit_distance"`
 	NeighborOverlap float64 `json:"neighbor_overlap"`
 	Confidence      float64 `json:"confidence"`
 }
