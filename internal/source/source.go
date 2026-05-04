@@ -268,7 +268,7 @@ func ResolveForBranch(repoPath, branch, outFlag string) (*Info, error) {
 
 	urlHash := hashString(repoURL)
 	cacheDir := filepath.Join(cacheBase(), "compare", urlHash, branch)
-	isCommit := isHexHash(branch)
+	isCommit := IsHexHash(branch)
 
 	// Check for existing clone; pull to update, re-clone if pull fails.
 	needsClone := true
@@ -347,8 +347,8 @@ func ResolveForBranch(repoPath, branch, outFlag string) (*Info, error) {
 
 // --- internal helpers ---
 
-// isHexHash returns true if s looks like a git commit SHA (7-40 hex chars).
-func isHexHash(s string) bool {
+// IsHexHash returns true if s looks like a git commit SHA (7-40 hex chars).
+func IsHexHash(s string) bool {
 	if len(s) < 7 || len(s) > 40 {
 		return false
 	}

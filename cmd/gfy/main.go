@@ -651,8 +651,13 @@ func runCompare(args []string, branches []string, formatStr string, skipCommunit
 		}
 		if len(branches) == 1 {
 			// Single branch: compare local working tree against the specified branch/commit.
+			// Always build fresh — the local tree may have changed since the last cached graph.
 			fmt.Println("Building graph for local working tree...")
-			g, err := loadOrBuildGraph(args[0])
+			info, err := source.Resolve(args[0], outFlag)
+			if err != nil {
+				return fmt.Errorf("local: %w", err)
+			}
+			g, err := buildGraphFromDir(info.SourceDir)
 			if err != nil {
 				return fmt.Errorf("local: %w", err)
 			}
@@ -817,10 +822,12 @@ func buildGraphForBranch(repoPath, branch string) (*graph.Graph, error) {
 		return nil, err
 	}
 
-	// Check for cached graph.json.
-	jsonPath := filepath.Join(info.OutDir, "graph.json")
-	if g, err := graph.LoadJSON(jsonPath); err == nil {
-		return g, nil
+	// Only use cached graph for immutable commit SHAs — branch tips can change.
+	if source.IsHexHash(branch) {
+		jsonPath := filepath.Join(info.OutDir, "graph.json")
+		if g, err := graph.LoadJSON(jsonPath); err == nil {
+			return g, nil
+		}
 	}
 
 	// Build from scratch.
@@ -832,7 +839,8 @@ func buildGraphForBranch(repoPath, branch string) (*graph.Graph, error) {
 	extraction := extract.Extract(codeFiles, info.SourceDir)
 	g := build.BuildFromResult(extraction, false)
 
-	// Cache for next time.
+	// Cache for next time (useful for commit SHAs; branches get rebuilt anyway).
+	jsonPath := filepath.Join(info.OutDir, "graph.json")
 	os.MkdirAll(filepath.Dir(jsonPath), 0o755)
 	export.ToJSON(g, jsonPath, true)
 	return g, nil
