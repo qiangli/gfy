@@ -2,7 +2,7 @@
 package trace
 
 import (
-	"github.com/qiangli/gfy/internal/graph"
+	"github.com/qiangli/gfy/pkg/graph"
 )
 
 // CallChain represents a path from a root caller to a tagged node.

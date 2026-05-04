@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/qiangli/gfy/internal/graph"
+	"github.com/qiangli/gfy/pkg/graph"
 )
 
 var nonAlphaNumRe = regexp.MustCompile(`[^A-Za-z0-9_]`)

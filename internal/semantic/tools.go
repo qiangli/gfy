@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/qiangli/gfy/internal/types"
+	"github.com/qiangli/gfy/pkg/types"
 )
 
 // ToolParam describes a parameter for an AST query tool.

@@ -3,7 +3,7 @@ package compare
 import (
 	"sort"
 
-	"github.com/qiangli/gfy/internal/graph"
+	"github.com/qiangli/gfy/pkg/graph"
 )
 
 // computeDrift analyzes import edge changes between two graphs,

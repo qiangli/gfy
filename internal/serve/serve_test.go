@@ -7,10 +7,10 @@ import (
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/qiangli/gfy/internal/analyze"
-	"github.com/qiangli/gfy/internal/cluster"
-	"github.com/qiangli/gfy/internal/graph"
-	"github.com/qiangli/gfy/internal/search"
+	"github.com/qiangli/gfy/pkg/analyze"
+	"github.com/qiangli/gfy/pkg/cluster"
+	"github.com/qiangli/gfy/pkg/graph"
+	"github.com/qiangli/gfy/pkg/search"
 	"github.com/qiangli/gfy/internal/trace"
 )
 

@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/qiangli/gfy/internal/graph"
+	"github.com/qiangli/gfy/pkg/graph"
 )
 
 // makeTreeGraph creates a graph with containment edges forming a tree.

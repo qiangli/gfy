@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/qiangli/gfy/internal/graph"
+	"github.com/qiangli/gfy/pkg/graph"
 )
 
 // CommunityColors is a 10-color palette for community visualization.

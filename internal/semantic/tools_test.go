@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/qiangli/gfy/internal/types"
+	"github.com/qiangli/gfy/pkg/types"
 )
 
 func makeTestResult() *types.ExtractionResult {

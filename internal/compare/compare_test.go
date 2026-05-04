@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/qiangli/gfy/internal/graph"
+	"github.com/qiangli/gfy/pkg/graph"
 )
 
 func TestDiffNodes(t *testing.T) {

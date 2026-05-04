@@ -14,14 +14,14 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 
-	"github.com/qiangli/gfy/internal/build"
-	"github.com/qiangli/gfy/internal/cluster"
-	"github.com/qiangli/gfy/internal/detect"
+	"github.com/qiangli/gfy/pkg/build"
+	"github.com/qiangli/gfy/pkg/cluster"
+	"github.com/qiangli/gfy/pkg/detect"
 	"github.com/qiangli/gfy/internal/export"
-	"github.com/qiangli/gfy/internal/extract"
-	"github.com/qiangli/gfy/internal/graph"
-	"github.com/qiangli/gfy/internal/search"
-	"github.com/qiangli/gfy/internal/types"
+	"github.com/qiangli/gfy/pkg/extract"
+	"github.com/qiangli/gfy/pkg/graph"
+	"github.com/qiangli/gfy/pkg/search"
+	"github.com/qiangli/gfy/pkg/types"
 )
 
 // Watch monitors a directory for file changes, rebuilds the graph, and

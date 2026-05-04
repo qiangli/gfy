@@ -3,7 +3,7 @@ package compare
 import (
 	"sort"
 
-	"github.com/qiangli/gfy/internal/graph"
+	"github.com/qiangli/gfy/pkg/graph"
 )
 
 // TreeNode represents a node in the containment tree extracted from a

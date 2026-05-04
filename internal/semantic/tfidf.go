@@ -6,7 +6,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/qiangli/gfy/internal/types"
+	"github.com/qiangli/gfy/pkg/types"
 )
 
 // stopWords contains common English words filtered during tokenization.

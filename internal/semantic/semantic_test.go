@@ -3,7 +3,7 @@ package semantic
 import (
 	"testing"
 
-	"github.com/qiangli/gfy/internal/types"
+	"github.com/qiangli/gfy/pkg/types"
 )
 
 func TestParseParamSize(t *testing.T) {

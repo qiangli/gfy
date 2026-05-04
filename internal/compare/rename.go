@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/qiangli/gfy/internal/graph"
+	"github.com/qiangli/gfy/pkg/graph"
 )
 
 // detectRenames finds likely rename/move candidates among removed and added nodes.

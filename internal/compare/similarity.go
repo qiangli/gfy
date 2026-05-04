@@ -4,8 +4,8 @@ import (
 	"math"
 	"sort"
 
-	"github.com/qiangli/gfy/internal/cluster"
-	"github.com/qiangli/gfy/internal/graph"
+	"github.com/qiangli/gfy/pkg/cluster"
+	"github.com/qiangli/gfy/pkg/graph"
 )
 
 // computeSimilarity calculates Jaccard and JSD metrics.

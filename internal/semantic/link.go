@@ -3,7 +3,7 @@ package semantic
 import (
 	"fmt"
 
-	"github.com/qiangli/gfy/internal/types"
+	"github.com/qiangli/gfy/pkg/types"
 )
 
 const (

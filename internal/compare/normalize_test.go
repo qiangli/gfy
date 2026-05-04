@@ -3,7 +3,7 @@ package compare
 import (
 	"testing"
 
-	"github.com/qiangli/gfy/internal/graph"
+	"github.com/qiangli/gfy/pkg/graph"
 )
 
 // buildCodeGraph creates a small code-like graph with file, functions, and calls.

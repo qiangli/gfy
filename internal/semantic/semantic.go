@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/qiangli/gfy/internal/cache"
-	"github.com/qiangli/gfy/internal/types"
+	"github.com/qiangli/gfy/pkg/cache"
+	"github.com/qiangli/gfy/pkg/types"
 )
 
 // Options configures semantic extraction.

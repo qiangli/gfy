@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/qiangli/gfy/internal/graph"
+	"github.com/qiangli/gfy/pkg/graph"
 )
 
 // NodeSignature captures the structural identity of a node independent of its
