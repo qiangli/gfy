@@ -12,31 +12,31 @@ The tool extracts structure from source code using tree-sitter AST parsing, buil
 
 ```bash
 make build          # go build ./cmd/gfy (injects version via ldflags)
-make test           # go test ./cmd/... ./internal/...
+make test           # go test ./cmd/... ./pkg/... ./internal/...
 make lint           # golangci-lint run
 make tidy           # go mod tidy, fmt, vet
 make install        # go install ./cmd/gfy
 make clean          # remove binary and .gfy-out/
 make diff           # build and run `gfy diff .`
 make help           # list all targets
-go test -run TestExtractGo ./internal/extract/       # single extract test
-go test -run TestLanguageExtractors ./internal/extract/  # all language tests
-go test -run TestFullPipeline ./internal/              # full e2e pipeline test
+go test -run TestExtractGo ./pkg/extract/       # single extract test
+go test -run TestLanguageExtractors ./pkg/extract/  # all language tests
+go test -run TestFullPipeline ./pkg/              # full e2e pipeline test
 ```
 
 **Output:** Results go to `.gfy-out/` (report, graph.json, graph.html). Default export formats: `json,html`.
 
-**Important:** Use `./cmd/... ./internal/...` instead of `./...` for tests — the `reference/` directory contains Python/C files that confuse the Go toolchain.
+**Important:** Use `./cmd/... ./pkg/... ./internal/...` instead of `./...` for tests — the `reference/` directory contains Python/C files that confuse the Go toolchain.
 
 ## Architecture
 
 Pipeline: `detect → extract → build → cluster → analyze → report → export`
 
-Each stage lives in its own `internal/<stage>/` package. `cmd/gfy/` is the CLI entry point (cobra).
+`cmd/gfy/` is the CLI entry point (cobra). Core library packages live in `pkg/` (public API): `analyze`, `build`, `cache`, `cluster`, `detect`, `extract`, `graph`, `report`, `search`, `types`, `validate`. Application-specific packages remain in `internal/`: `compare`, `export`, `semantic`, `serve`, `source`, `trace`, `watch`.
 
 ### Extractor Architecture (the most complex subsystem)
 
-The `internal/extract/` package uses three tiers of extractors, all registered in a dispatch map (`extract.go`) keyed by file extension:
+The `pkg/extract/` package uses three tiers of extractors, all registered in a dispatch map (`extract.go`) keyed by file extension:
 
 1. **Custom extractors** — Hand-written AST walkers for languages with unique patterns: Go, Python, JS/TS, Rust, Zig, PowerShell, Elixir, Julia, Objective-C, Verilog. Each is an `Extract<Lang>(path) *types.ExtractionResult` function.
 2. **Generic config-driven extractors** — 10 languages (Java, C, C++, Ruby, C#, Kotlin, Scala, PHP, Lua, Swift) share one `ExtractGeneric()` walker parameterized by a `LanguageConfig` struct (`langconfig.go`). The config declares AST node type names and optional hooks for language-specific behavior.
@@ -68,6 +68,7 @@ The `internal/compare/` package provides pairwise and N-way graph comparison wit
 
 ### Other Key Packages
 
+**`pkg/` packages (public API):**
 - **`types/`** — Core types: `Node`, `Edge`, `RawCall`, `ExtractionResult`, `Confidence` (EXTRACTED/INFERRED/AMBIGUOUS)
 - **`graph/`** — Custom adjacency-list graph (`map[string]map[string]map[string]any`) matching NetworkX dict-of-dicts semantics. Supports BFS, shortest path, subgraph extraction.
 - **`build/`** — Transforms extraction results into graph with ID normalization and deduplication
@@ -75,12 +76,15 @@ The `internal/compare/` package provides pairwise and N-way graph comparison wit
 - **`analyze/`** — God nodes (most-connected entities), surprising connections (cross-community edges), suggested questions
 - **`report/`** — Generates `GRAPH_REPORT.md` with god nodes, surprising connections, community cohesion scores
 - **`detect/`** — File classification (code, document, paper). Detects sensitive files (credentials, keys) and skips them. Respects `.gfyignore`.
-- **`semantic/`** — LLM-powered extraction from non-code files (docs, papers) via Ollama. Per-file SHA256-based caching. Merges concepts/rationale into the AST graph.
 - **`cache/`** — SHA256-based file hashing with streaming. JSON-encoded cache entries in `.cache/` subdirectories. Per-stage caching (extraction, semantic).
-- **`trace/`** — Backward BFS call graph tracing from tagged nodes. Tags: throws, logs, fs, net, exec, async, unsafe, test, catches, otel.
 - **`search/`** — Fuzzy matching (Levenshtein ≤2) with scoring: exact (+10), prefix (+5), contains (+2), degree-weighted tiebreaker.
-- **`export/`** — JSON (NetworkX format), GraphML (Gephi/Cytoscape), Cypher (Neo4j), Obsidian (markdown with wikilinks)
 - **`validate/`** — ExtractionResult schema validation (node/edge IDs, required fields, confidence levels)
+
+**`internal/` packages (application-specific):**
+- **`compare/`** — Pairwise and N-way graph comparison (see Compare Architecture above)
+- **`semantic/`** — LLM-powered extraction from non-code files (docs, papers) via Ollama. Per-file SHA256-based caching. Merges concepts/rationale into the AST graph.
+- **`trace/`** — Backward BFS call graph tracing from tagged nodes. Tags: throws, logs, fs, net, exec, async, unsafe, test, catches, otel.
+- **`export/`** — JSON (NetworkX format), GraphML (Gephi/Cytoscape), Cypher (Neo4j), Obsidian (markdown with wikilinks)
 - **`serve/`** — MCP stdio server (15 tools via modelcontextprotocol/go-sdk)
 - **`watch/`** — File watching with fsnotify, auto-rebuild. Web UI uses vis-network (vis.js) for force-directed graph visualization, SSE for live reload. HTML is embedded as a constant string (no template files).
 - **`source/`** — Source resolution: local directories, archives (.zip/.tar/.tgz), git URLs. Caches clones under `~/.gfy/`.
@@ -128,9 +132,9 @@ child := root.ChildByFieldName("name", lang)      // NOT root.ChildByFieldName("
 
 ## Adding a New Language Extractor
 
-1. Create `internal/extract/extract_<lang>.go` with an `Extract<Lang>(path string) *types.ExtractionResult` function
+1. Create `pkg/extract/extract_<lang>.go` with an `Extract<Lang>(path string) *types.ExtractionResult` function
 2. Use the same pattern as `extract_go.go`: load grammar via `grammars.<Lang>Language()`, walk AST, emit nodes/edges/rawCalls
-3. Register in the `dispatch` map in `internal/extract/extract.go`
+3. Register in the `dispatch` map in `pkg/extract/extract.go`
 4. Add test fixture in `testdata/` and test in `extract_test.go`
 
 ## Graph JSON Format

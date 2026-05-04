@@ -8,6 +8,7 @@ import (
 	"archive/zip"
 	"compress/gzip"
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net"
@@ -265,42 +266,70 @@ func ResolveForBranch(repoPath, branch, outFlag string) (*Info, error) {
 		repoURL = absPath
 	}
 
-	hash := hashString(repoURL)
-	cacheDir := filepath.Join(cacheBase(), "compare", hash, branch)
+	urlHash := hashString(repoURL)
+	cacheDir := filepath.Join(cacheBase(), "compare", urlHash, branch)
+	isCommit := isHexHash(branch)
 
 	// Check for existing clone; pull to update, re-clone if pull fails.
 	needsClone := true
 	if _, err := git.PlainOpen(cacheDir); err == nil {
-		fmt.Printf("Using cached branch clone: %s\n", cacheDir)
-		repo, err := git.PlainOpen(cacheDir)
-		if err == nil {
-			w, err := repo.Worktree()
+		fmt.Printf("Using cached clone: %s\n", cacheDir)
+		if isCommit {
+			// Commit SHAs are immutable — cached clone is always valid.
+			needsClone = false
+		} else {
+			repo, err := git.PlainOpen(cacheDir)
 			if err == nil {
-				pullErr := w.Pull(&git.PullOptions{Depth: 1, Auth: gitAuth(repoURL)})
-				if pullErr == nil || pullErr == git.NoErrAlreadyUpToDate {
-					needsClone = false
-				} else {
-					fmt.Printf("  Pull failed: %v; re-cloning...\n", pullErr)
-					os.RemoveAll(cacheDir)
+				w, err := repo.Worktree()
+				if err == nil {
+					pullErr := w.Pull(&git.PullOptions{Depth: 1, Auth: gitAuth(repoURL)})
+					if pullErr == nil || pullErr == git.NoErrAlreadyUpToDate {
+						needsClone = false
+					} else {
+						fmt.Printf("  Pull failed: %v; re-cloning...\n", pullErr)
+						os.RemoveAll(cacheDir)
+					}
 				}
 			}
 		}
 	}
 	if needsClone {
-		fmt.Printf("Cloning branch %q to %s...\n", branch, cacheDir)
 		if err := os.MkdirAll(filepath.Dir(cacheDir), 0o755); err != nil {
 			return nil, fmt.Errorf("create cache dir: %w", err)
 		}
-		_, err := git.PlainClone(cacheDir, false, &git.CloneOptions{
-			URL:           repoURL,
-			Depth:         1,
-			SingleBranch:  true,
-			ReferenceName: plumbing.NewBranchReferenceName(branch),
-			Auth:          gitAuth(repoURL),
-		})
-		if err != nil {
-			os.RemoveAll(cacheDir)
-			return nil, fmt.Errorf("clone branch %s: %w", branch, err)
+		if isCommit {
+			// Commit SHA: full clone (need history to reach the commit), then checkout.
+			fmt.Printf("Cloning repo and checking out commit %s...\n", branch[:12])
+			repo, err := git.PlainClone(cacheDir, false, &git.CloneOptions{
+				URL:  repoURL,
+				Auth: gitAuth(repoURL),
+			})
+			if err != nil {
+				os.RemoveAll(cacheDir)
+				return nil, fmt.Errorf("clone for commit %s: %w", branch, err)
+			}
+			w, err := repo.Worktree()
+			if err != nil {
+				os.RemoveAll(cacheDir)
+				return nil, fmt.Errorf("worktree for commit %s: %w", branch, err)
+			}
+			if err := w.Checkout(&git.CheckoutOptions{Hash: plumbing.NewHash(branch)}); err != nil {
+				os.RemoveAll(cacheDir)
+				return nil, fmt.Errorf("checkout commit %s: %w", branch, err)
+			}
+		} else {
+			fmt.Printf("Cloning branch %q to %s...\n", branch, cacheDir)
+			_, err := git.PlainClone(cacheDir, false, &git.CloneOptions{
+				URL:           repoURL,
+				Depth:         1,
+				SingleBranch:  true,
+				ReferenceName: plumbing.NewBranchReferenceName(branch),
+				Auth:          gitAuth(repoURL),
+			})
+			if err != nil {
+				os.RemoveAll(cacheDir)
+				return nil, fmt.Errorf("clone branch %s: %w", branch, err)
+			}
 		}
 	}
 
@@ -317,6 +346,24 @@ func ResolveForBranch(repoPath, branch, outFlag string) (*Info, error) {
 }
 
 // --- internal helpers ---
+
+// isHexHash returns true if s looks like a git commit SHA (7-40 hex chars).
+func isHexHash(s string) bool {
+	if len(s) < 7 || len(s) > 40 {
+		return false
+	}
+	_, err := hex.DecodeString(s)
+	// hex.DecodeString requires even length; for odd-length, check manually.
+	if len(s)%2 != 0 {
+		for _, c := range s {
+			if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+				return false
+			}
+		}
+		return true
+	}
+	return err == nil
+}
 
 func cacheBase() string {
 	home, _ := os.UserHomeDir()

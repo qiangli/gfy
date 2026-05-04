@@ -213,6 +213,8 @@ func main() {
 			"  gfy compare ./project-v1 ./project-v2\n" +
 			"  gfy compare --normalize ./repo-a ./repo-b\n" +
 			"  gfy compare graph-old.json graph-new.json\n" +
+			"  gfy compare --branch main .                    # local vs branch\n" +
+			"  gfy compare --branch abc123 .                  # local vs commit\n" +
 			"  gfy compare --branch main --branch feature-x .\n" +
 			"  gfy compare --branch main --branch dev --branch staging .\n" +
 			"  gfy compare https://github.com/user/repo1 https://github.com/user/repo2",
@@ -223,7 +225,7 @@ func main() {
 		},
 	}
 	compareCmd.Flags().StringSliceVar(&compareBranches, "branch", nil,
-		"branches to compare (requires exactly one source argument)")
+		"branch or commit to compare; one --branch compares local vs that ref, two or more compare them against each other")
 	compareCmd.Flags().StringVarP(&compareFormats, "format", "f", "markdown",
 		"output format: markdown, json (comma-separated)")
 	compareCmd.Flags().BoolVar(&compareSkipCommunities, "skip-communities", false,
@@ -643,12 +645,20 @@ func runCompare(args []string, branches []string, formatStr string, skipCommunit
 	var labels []string
 
 	if len(branches) > 0 {
-		// Branch mode: single source, multiple branches.
+		// Branch mode: single source, one or more branches.
 		if len(args) != 1 {
 			return fmt.Errorf("--branch requires exactly one source argument")
 		}
-		if len(branches) < 2 {
-			return fmt.Errorf("--branch requires at least two branches to compare")
+		if len(branches) == 1 {
+			// Single branch: compare local working tree against the specified branch/commit.
+			fmt.Println("Building graph for local working tree...")
+			g, err := loadOrBuildGraph(args[0])
+			if err != nil {
+				return fmt.Errorf("local: %w", err)
+			}
+			graphs = append(graphs, g)
+			labels = append(labels, "local")
+			fmt.Printf("  Local: %d nodes, %d edges\n", g.NodeCount(), g.EdgeCount())
 		}
 		for _, branch := range branches {
 			fmt.Printf("Building graph for branch %q...\n", branch)
