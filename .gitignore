@@ -1,3 +1,6 @@
 reference
 .gfy-out
 /gfy
+
+# ycode local artifacts
+.agents/
