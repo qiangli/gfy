@@ -137,6 +137,14 @@ func newIgnoreStack(root string) *ignoreStack {
 	s := &ignoreStack{root: root}
 	// Load ancestor patterns (above root, up to .git root).
 	s.loadAncestors(root)
+	// If the scan root itself would be excluded by ancestor patterns,
+	// the user is intentionally scanning a directory their parent project
+	// gitignores (e.g., a vendored reference/ or priorart/ folder). Drop
+	// the ancestor patterns so the scan can proceed; the user's explicit
+	// choice of scan root overrides the parent project's ignore rules.
+	if len(s.patterns) > 0 && s.isIgnored(root) {
+		s.patterns = nil
+	}
 	// Load patterns in root itself.
 	s.loadDir(root)
 	return s
