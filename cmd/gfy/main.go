@@ -93,7 +93,7 @@ func main() {
 		RunE: runBuild,
 	}
 	buildCmd.Flags().StringVarP(&formats, "format", "f", "json,html",
-		"export formats: json,html,obsidian,cypher,graphml (comma-separated)")
+		"export formats: json,html,obsidian,cypher,graphml,mermaid (comma-separated)")
 	buildCmd.Flags().BoolVar(&noCache, "no-cache", false,
 		"ignore and clear cached extraction results")
 	buildCmd.Flags().BoolVar(&noSemantic, "no-semantic", false,
@@ -543,6 +543,17 @@ func buildAndExport(extraction *types.ExtractionResult, targetPath, outDir strin
 		p := filepath.Join(outDir, "graph.graphml")
 		if err := export.ToGraphML(g, communities, p); err != nil {
 			return fmt.Errorf("export GraphML: %w", err)
+		}
+		fmt.Printf("  Wrote %s\n", p)
+	}
+	if fmtSet["mermaid"] {
+		p := filepath.Join(outDir, "callflow.md")
+		opts := export.MermaidOptions{
+			GroupByCommunity: true,
+			HighlightTags:    true,
+		}
+		if err := export.ToMermaid(g, communities, communityLabels, p, opts); err != nil {
+			return fmt.Errorf("export Mermaid: %w", err)
 		}
 		fmt.Printf("  Wrote %s\n", p)
 	}

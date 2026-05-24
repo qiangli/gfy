@@ -295,6 +295,44 @@ func TestHTMLContainsVisJS(t *testing.T) {
 	}
 }
 
+// TestMermaidCallflow verifies the Mermaid exporter produces a valid
+// fenced-block markdown file from the real testdata graph.
+func TestMermaidCallflow(t *testing.T) {
+	dir := testdataDir()
+	codeFiles := detect.Detect(dir, false).Files[types.Code]
+	extraction := extract.Extract(codeFiles, "")
+	g := build.BuildFromResult(extraction, false)
+	communities := cluster.Cluster(g)
+	communityLabels := make(map[int]string)
+	for cid := range communities {
+		communityLabels[cid] = "Community " + string(rune('A'+cid%26))
+	}
+
+	outDir := t.TempDir()
+	path := filepath.Join(outDir, "callflow.md")
+	opts := export.MermaidOptions{GroupByCommunity: true, HighlightTags: true}
+	if err := export.ToMermaid(g, communities, communityLabels, path, opts); err != nil {
+		t.Fatalf("ToMermaid: %v", err)
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := string(data)
+	for _, want := range []string{"```mermaid", "flowchart TD", "```"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("callflow.md missing %q", want)
+		}
+	}
+	// Exactly one opening and one closing fence.
+	if strings.Count(out, "```mermaid") != 1 {
+		t.Errorf("expected exactly one ```mermaid fence, got %d", strings.Count(out, "```mermaid"))
+	}
+	if strings.Count(out, "```") != 2 {
+		t.Errorf("expected exactly one open + one close fence (2 total), got %d", strings.Count(out, "```"))
+	}
+}
+
 // TestGraphMLValid verifies the GraphML output is valid XML.
 func TestGraphMLValid(t *testing.T) {
 	dir := testdataDir()
