@@ -89,11 +89,11 @@ func TestSemanticSearch_E2E(t *testing.T) {
 	// hashEmbed function the mock server uses for queries.
 	g := graph.New(false)
 	nodes := map[string]string{
-		"auth_login":     "login validate password",
-		"db_query":       "database query rows",
-		"http_handler":   "http handler request",
-		"rate_limiter":   "rate limit throttle requests per second",
-		"unused_helper":  "helper utility",
+		"auth_login":    "login validate password",
+		"db_query":      "database query rows",
+		"http_handler":  "http handler request",
+		"rate_limiter":  "rate limit throttle requests per second",
+		"unused_helper": "helper utility",
 	}
 	store := &search.EmbeddingStore{
 		Model:   "mock-embed",
