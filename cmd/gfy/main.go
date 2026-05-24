@@ -14,34 +14,38 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/qiangli/gfy/pkg/analyze"
-	"github.com/qiangli/gfy/pkg/build"
-	"github.com/qiangli/gfy/pkg/cache"
-	clust "github.com/qiangli/gfy/pkg/cluster"
 	"github.com/qiangli/gfy/internal/compare"
-	"github.com/qiangli/gfy/pkg/detect"
 	"github.com/qiangli/gfy/internal/export"
-	"github.com/qiangli/gfy/pkg/extract"
-	"github.com/qiangli/gfy/pkg/graph"
-	"github.com/qiangli/gfy/pkg/report"
-	"github.com/qiangli/gfy/pkg/search"
+	"github.com/qiangli/gfy/internal/install"
 	"github.com/qiangli/gfy/internal/semantic"
 	"github.com/qiangli/gfy/internal/serve"
 	"github.com/qiangli/gfy/internal/source"
 	"github.com/qiangli/gfy/internal/trace"
-	"github.com/qiangli/gfy/pkg/types"
 	"github.com/qiangli/gfy/internal/watch"
+	"github.com/qiangli/gfy/pkg/analyze"
+	"github.com/qiangli/gfy/pkg/build"
+	"github.com/qiangli/gfy/pkg/cache"
+	clust "github.com/qiangli/gfy/pkg/cluster"
+	"github.com/qiangli/gfy/pkg/detect"
+	"github.com/qiangli/gfy/pkg/extract"
+	"github.com/qiangli/gfy/pkg/graph"
+	"github.com/qiangli/gfy/pkg/report"
+	"github.com/qiangli/gfy/pkg/search"
+	"github.com/qiangli/gfy/pkg/types"
 )
 
 var (
 	version        = "dev"
 	formats        string
 	noSemantic     bool
+	noEmbeddings   bool
 	noCache        bool
 	model          string
+	embedModel     string
 	ollamaURL      string
 	outFlag        string
 	viewAfterBuild bool
+	querySemantic  bool
 )
 
 func init() {
@@ -94,8 +98,12 @@ func main() {
 		"ignore and clear cached extraction results")
 	buildCmd.Flags().BoolVar(&noSemantic, "no-semantic", false,
 		"skip semantic extraction even if Ollama is available")
+	buildCmd.Flags().BoolVar(&noEmbeddings, "no-embeddings", false,
+		"skip node embedding generation (semantic search will fall back to fuzzy)")
 	buildCmd.Flags().StringVar(&model, "model", "",
 		"LLM model for semantic extraction (auto-selects if empty)")
+	buildCmd.Flags().StringVar(&embedModel, "embed-model", "",
+		"Ollama embedding model (auto-selects nomic-embed-text, mxbai-embed-large, ... if empty)")
 	buildCmd.Flags().StringVar(&ollamaURL, "ollama-url", "http://localhost:11434",
 		"Ollama server URL")
 	buildCmd.Flags().BoolVar(&viewAfterBuild, "view", false,
@@ -122,10 +130,16 @@ func main() {
 		Short: "Search the knowledge graph by keyword",
 		Long: "Find nodes matching search terms and display their BFS neighborhood.\n" +
 			"Auto-builds the graph if it doesn't exist yet.\n\n" +
+			"Use --semantic to rank by embedding similarity (requires that the\n" +
+			"graph was built with embeddings enabled and Ollama is reachable).\n\n" +
 			"Source can be a local directory, archive, or git URL.",
 		Args: cobra.ExactArgs(2),
 		RunE: runQuery,
 	}
+	queryCmd.Flags().BoolVar(&querySemantic, "semantic", false,
+		"rank results by embedding similarity (requires embeddings.bin sidecar)")
+	queryCmd.Flags().StringVar(&ollamaURL, "ollama-url", "http://localhost:11434",
+		"Ollama server URL (used with --semantic to embed the query)")
 	rootCmd.AddCommand(queryCmd)
 
 	// --- path command ---
@@ -262,6 +276,39 @@ func main() {
 	diffCmd.Flags().StringVar(&diffBase, "base", "",
 		"override tracking branch (e.g., main, develop)")
 	rootCmd.AddCommand(diffCmd)
+
+	// --- install command ---
+	var installTarget, installScope, installProject string
+	var installDryRun, installUninstall bool
+	installCmd := &cobra.Command{
+		Use:   "install",
+		Short: "Register gfy as a skill/plugin with LLM IDEs (Claude Code, Cursor)",
+		Long: "Write SKILL.md / .cursor/rules so that Claude Code or Cursor\n" +
+			"auto-discovers gfy. Also prints an MCP server snippet for the\n" +
+			"user to paste into their MCP config — we never edit those files\n" +
+			"in place because they are user-owned and risky to merge.\n\n" +
+			"Examples:\n" +
+			"  gfy install                                # claude-code, user scope\n" +
+			"  gfy install --target cursor\n" +
+			"  gfy install --target all --scope project\n" +
+			"  gfy install --uninstall --target all\n" +
+			"  gfy install --dry-run                      # preview without writing",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runInstall(installTarget, installScope, installProject, installDryRun, installUninstall)
+		},
+	}
+	installCmd.Flags().StringVar(&installTarget, "target", "claude-code",
+		"target IDE: claude-code, cursor, all")
+	installCmd.Flags().StringVar(&installScope, "scope", "user",
+		"installation scope: user (~/.claude/) or project (./.claude/)")
+	installCmd.Flags().StringVar(&installProject, "project-dir", "",
+		"project directory for --scope=project (default: cwd)")
+	installCmd.Flags().BoolVar(&installDryRun, "dry-run", false,
+		"print actions without writing files")
+	installCmd.Flags().BoolVar(&installUninstall, "uninstall", false,
+		"remove previously installed skill/rules files")
+	rootCmd.AddCommand(installCmd)
 
 	rootCmd.PersistentFlags().StringVarP(&outFlag, "out", "o", "", "output directory (default: <path>/.gfy-out/)")
 
@@ -499,6 +546,49 @@ func buildAndExport(extraction *types.ExtractionResult, targetPath, outDir strin
 		}
 		fmt.Printf("  Wrote %s\n", p)
 	}
+
+	if !noEmbeddings {
+		if err := writeEmbeddings(g, outDir); err != nil {
+			fmt.Fprintf(os.Stderr, "  Warning: embeddings skipped (%v)\n", err)
+		}
+	}
+	return nil
+}
+
+// writeEmbeddings builds and saves an embedding for every node, if a suitable
+// Ollama embedding model is locally available. Failures are non-fatal: the AST
+// graph is still useful without semantic search.
+func writeEmbeddings(g *graph.Graph, outDir string) error {
+	models, err := semantic.ListModels(ollamaURL)
+	if err != nil {
+		return fmt.Errorf("Ollama not reachable")
+	}
+	chosen := embedModel
+	if chosen == "" {
+		chosen = semantic.SelectEmbedModel(models)
+	}
+	if chosen == "" {
+		return fmt.Errorf("no embedding model found — try: ollama pull nomic-embed-text")
+	}
+
+	fmt.Printf("Embedding %d nodes with %s...\n", g.NodeCount(), chosen)
+	client := &semantic.Client{BaseURL: ollamaURL}
+	store, err := semantic.EmbedGraph(g, client, chosen, func(done, total int) {
+		if done == total || done%128 == 0 {
+			fmt.Printf("  %d/%d embedded\n", done, total)
+		}
+	})
+	if err != nil {
+		return err
+	}
+	if store == nil || len(store.Vectors) == 0 {
+		return fmt.Errorf("no vectors produced")
+	}
+	p := filepath.Join(outDir, "embeddings.bin")
+	if err := search.SaveEmbeddings(p, store); err != nil {
+		return fmt.Errorf("save embeddings: %w", err)
+	}
+	fmt.Printf("  Wrote %s (dim=%d, model=%s)\n", p, store.Dim, store.Model)
 	return nil
 }
 
@@ -510,9 +600,22 @@ func runServe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	communities := clust.Cluster(g)
-	fmt.Fprintf(os.Stderr, "gfy MCP server: %d nodes, %d edges, %d communities\n",
-		g.NodeCount(), g.EdgeCount(), len(communities))
-	return serve.Serve(g, communities)
+	opts := serve.Options{OllamaURL: ollamaURL}
+	if info, err := source.Resolve(args[0], outFlag); err == nil {
+		embedPath := filepath.Join(info.OutDir, "embeddings.bin")
+		if store, err := search.LoadEmbeddings(embedPath); err == nil {
+			opts.Embeddings = store
+			fmt.Fprintf(os.Stderr, "gfy MCP server: %d nodes, %d edges, %d communities, embeddings=%s (dim %d)\n",
+				g.NodeCount(), g.EdgeCount(), len(communities), store.Model, store.Dim)
+		} else {
+			fmt.Fprintf(os.Stderr, "gfy MCP server: %d nodes, %d edges, %d communities (no embeddings: %v)\n",
+				g.NodeCount(), g.EdgeCount(), len(communities), err)
+		}
+	} else {
+		fmt.Fprintf(os.Stderr, "gfy MCP server: %d nodes, %d edges, %d communities\n",
+			g.NodeCount(), g.EdgeCount(), len(communities))
+	}
+	return serve.ServeWithOptions(g, communities, opts)
 }
 
 // --- query ---
@@ -523,7 +626,17 @@ func runQuery(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	results := search.ScoreNodes(g, args[1])
+	var results []search.Result
+	if querySemantic {
+		results, err = runSemanticQuery(args[0], args[1])
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: semantic query failed (%v); falling back to fuzzy.\n", err)
+			results = nil
+		}
+	}
+	if len(results) == 0 {
+		results = search.ScoreNodes(g, args[1])
+	}
 	if len(results) == 0 {
 		fmt.Println("No matching nodes found.")
 		return nil
@@ -543,6 +656,28 @@ func runQuery(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  - %s (%s)\n", nodeAttr(attrs, "label"), nodeAttr(attrs, "file_type"))
 	}
 	return nil
+}
+
+// runSemanticQuery loads the embeddings sidecar for the source, embeds the
+// query via Ollama, and ranks nodes by cosine similarity. Returns an error
+// if the sidecar is missing or Ollama is unreachable so the caller can
+// fall back to fuzzy ranking.
+func runSemanticQuery(srcArg, query string) ([]search.Result, error) {
+	info, err := source.Resolve(srcArg, outFlag)
+	if err != nil {
+		return nil, err
+	}
+	embedPath := filepath.Join(info.OutDir, "embeddings.bin")
+	store, err := search.LoadEmbeddings(embedPath)
+	if err != nil {
+		return nil, fmt.Errorf("load embeddings (%s): %w", embedPath, err)
+	}
+	client := &semantic.Client{BaseURL: ollamaURL}
+	vec, err := client.Embed(store.Model, query)
+	if err != nil {
+		return nil, err
+	}
+	return search.RankByEmbedding(store, vec, 10), nil
 }
 
 // --- trace ---
@@ -1034,6 +1169,40 @@ func openBrowser(url string) error {
 	}
 	args = append(args, url)
 	return exec.Command(cmd, args...).Start()
+}
+
+// --- install ---
+
+func runInstall(target, scope, projectDir string, dryRun, uninstall bool) error {
+	targets, err := install.ParseTarget(target)
+	if err != nil {
+		return err
+	}
+	binaryPath, err := os.Executable()
+	if err != nil || binaryPath == "" {
+		binaryPath = "gfy"
+	}
+
+	for _, t := range targets {
+		opts := install.Options{
+			Target:     t,
+			Scope:      install.Scope(scope),
+			ProjectDir: projectDir,
+			BinaryPath: binaryPath,
+			DryRun:     dryRun,
+			Uninstall:  uninstall,
+			Out:        os.Stdout,
+		}
+		fmt.Printf("[%s]\n", t)
+		if _, err := install.Run(opts); err != nil {
+			return fmt.Errorf("%s: %w", t, err)
+		}
+		fmt.Println()
+	}
+	if !uninstall && !dryRun {
+		fmt.Println("Done. Restart your IDE to pick up the new skill.")
+	}
+	return nil
 }
 
 // --- helpers ---

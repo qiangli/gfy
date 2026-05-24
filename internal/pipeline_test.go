@@ -9,11 +9,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/qiangli/gfy/internal/export"
 	"github.com/qiangli/gfy/pkg/analyze"
 	"github.com/qiangli/gfy/pkg/build"
 	"github.com/qiangli/gfy/pkg/cluster"
 	"github.com/qiangli/gfy/pkg/detect"
-	"github.com/qiangli/gfy/internal/export"
 	"github.com/qiangli/gfy/pkg/extract"
 	"github.com/qiangli/gfy/pkg/graph"
 	"github.com/qiangli/gfy/pkg/report"

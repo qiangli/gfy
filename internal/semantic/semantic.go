@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/qiangli/gfy/pkg/cache"
+	"github.com/qiangli/gfy/pkg/detect"
 	"github.com/qiangli/gfy/pkg/types"
 )
 
@@ -165,17 +166,27 @@ func Extract(files []string, root string, opts Options) (*types.ExtractionResult
 			rel = path
 		}
 
-		data, err := os.ReadFile(path)
-		if err != nil {
-			fmt.Printf("  [%d/%d] %s — skipped (read error)\n", i+1, len(uncached), rel)
+		text, readErr := readFileAsText(path)
+		if readErr != nil {
+			fmt.Printf("  [%d/%d] %s — skipped (read error: %v)\n", i+1, len(uncached), rel, readErr)
 			continue
 		}
-		text := string(data)
 		if len(text) > maxFileChars {
 			text = text[:maxFileChars]
 		}
 		if strings.TrimSpace(text) == "" {
 			continue
+		}
+
+		// Emit a baseline `document` node so the raw content is embeddable.
+		// LLM-generated nodes (concepts, rationale) are layered on top via
+		// the extraction prompt and link back to this node by source_file.
+		docNode := types.Node{
+			ID:         documentNodeID(path),
+			Label:      filepath.Base(path),
+			FileType:   string(types.Document),
+			SourceFile: rel,
+			Content:    snippet(text, 4000),
 		}
 
 		var userMsg string
@@ -199,6 +210,8 @@ func Extract(files []string, root string, opts Options) (*types.ExtractionResult
 		}
 
 		result := parseLLMResponse(content)
+		// Prepend the document node; it gets cached too so embeddings see it on rerun.
+		result.Nodes = append([]types.Node{docNode}, result.Nodes...)
 		merged.Nodes = append(merged.Nodes, result.Nodes...)
 		merged.Edges = append(merged.Edges, result.Edges...)
 		merged.InputTokens += usage.PromptTokens
@@ -315,6 +328,62 @@ func parseLLMResponse(raw string) *types.ExtractionResult {
 	}
 
 	return result
+}
+
+// readFileAsText converts a file to text by extension. Binary formats
+// (PDF/DOCX/XLSX) are routed through the detect package converters; everything
+// else is read as UTF-8.
+func readFileAsText(path string) (string, error) {
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".pdf":
+		text := detect.ExtractPDFText(path)
+		if text == "" {
+			return "", fmt.Errorf("pdf yielded no text (likely scanned/encrypted)")
+		}
+		return text, nil
+	case ".docx":
+		text := detect.DocxToMarkdown(path)
+		if text == "" {
+			return "", fmt.Errorf("docx yielded no text")
+		}
+		return text, nil
+	case ".xlsx":
+		text := detect.XlsxToMarkdown(path)
+		if text == "" {
+			return "", fmt.Errorf("xlsx yielded no text")
+		}
+		return text, nil
+	default:
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return "", err
+		}
+		return string(data), nil
+	}
+}
+
+// documentNodeID derives a stable, lowercase node ID from a file path, matching
+// the {stem}_{kind} convention used by the extraction prompt.
+func documentNodeID(path string) string {
+	base := filepath.Base(path)
+	ext := filepath.Ext(base)
+	stem := strings.TrimSuffix(base, ext)
+	stem = strings.ToLower(reIDNorm.ReplaceAllString(stem, "_"))
+	stem = strings.Trim(stem, "_")
+	if stem == "" {
+		stem = "doc"
+	}
+	return stem + "_doc"
+}
+
+var reIDNorm = regexp.MustCompile(`[^a-zA-Z0-9]+`)
+
+// snippet returns the first n characters of s, with an ellipsis if truncated.
+func snippet(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n] + "…"
 }
 
 // normalizeEdge creates an Edge with validated confidence, score, and weight.

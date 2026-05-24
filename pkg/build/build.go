@@ -52,6 +52,9 @@ func BuildFromResult(result *types.ExtractionResult, directed bool) *graph.Graph
 		if node.Comment != "" {
 			attrs["comment"] = node.Comment
 		}
+		if node.Content != "" {
+			attrs["content"] = node.Content
+		}
 		if len(node.LogMessages) > 0 {
 			attrs["log_messages"] = node.LogMessages
 		}

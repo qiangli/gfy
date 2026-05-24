@@ -33,8 +33,12 @@ type Node struct {
 	SourceLocation string   `json:"source_location,omitempty"`
 	Tags           []string `json:"tags,omitempty"`
 	Comment        string   `json:"comment,omitempty"`
-	LogMessages    []string `json:"log_messages,omitempty"`
-	ThrowMessages  []string `json:"throw_messages,omitempty"`
+	// Content holds the full or truncated text body of a document-type node
+	// (e.g., markdown/PDF/DOCX/XLSX). It is used as input to embedding and
+	// semantic search but is generally not part of the AST extraction path.
+	Content       string   `json:"content,omitempty"`
+	LogMessages   []string `json:"log_messages,omitempty"`
+	ThrowMessages []string `json:"throw_messages,omitempty"`
 }
 
 // Edge represents a relationship between two nodes.
@@ -70,11 +74,11 @@ type ExtractionResult struct {
 
 // DetectionResult holds the output of file discovery and classification.
 type DetectionResult struct {
-	Files               map[FileType][]string `json:"files"`
-	TotalFiles          int                   `json:"total_files"`
-	TotalWords          int                   `json:"total_words"`
-	NeedsGraph          bool                  `json:"needs_graph"`
-	Warning             string                `json:"warning,omitempty"`
-	SkippedSensitive    []string              `json:"skipped_sensitive"`
-	GfyIgnoreCount int                   `json:"gfyignore_patterns"`
+	Files            map[FileType][]string `json:"files"`
+	TotalFiles       int                   `json:"total_files"`
+	TotalWords       int                   `json:"total_words"`
+	NeedsGraph       bool                  `json:"needs_graph"`
+	Warning          string                `json:"warning,omitempty"`
+	SkippedSensitive []string              `json:"skipped_sensitive"`
+	GfyIgnoreCount   int                   `json:"gfyignore_patterns"`
 }

@@ -7,11 +7,11 @@ import (
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/qiangli/gfy/internal/trace"
 	"github.com/qiangli/gfy/pkg/analyze"
 	"github.com/qiangli/gfy/pkg/cluster"
 	"github.com/qiangli/gfy/pkg/graph"
 	"github.com/qiangli/gfy/pkg/search"
-	"github.com/qiangli/gfy/internal/trace"
 )
 
 // buildTestGraph creates a realistic knowledge graph for testing MCP tools.
@@ -496,7 +496,7 @@ func TestRegisterAllTools(t *testing.T) {
 	server := mcp.NewServer(&mcp.Implementation{
 		Name: "gfy-test", Version: "test",
 	}, nil)
-	registerTools(server, g, communities)
+	registerTools(server, g, communities, Options{})
 }
 
 // callGraphStats exercises the graph_stats logic directly for testing.

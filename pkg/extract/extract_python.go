@@ -33,7 +33,7 @@ var pyNetObjects = map[string]bool{
 var pyOtelObjects = map[string]bool{
 	"tracer": true, "meter": true, "metrics": true,
 	"opentelemetry": true,
-	"ddtrace": true, "statsd": true,
+	"ddtrace":       true, "statsd": true,
 	"prometheus_client": true,
 }
 var pyOtelFuncs = map[string]bool{

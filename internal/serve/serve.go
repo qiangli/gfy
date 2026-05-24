@@ -16,25 +16,40 @@ import (
 	"github.com/qiangli/gfy/pkg/search"
 )
 
+// Options configures the MCP server.
+type Options struct {
+	// Embeddings is an optional store loaded from embeddings.bin. When non-nil,
+	// a `semantic_search` tool is registered that ranks by cosine similarity.
+	Embeddings *search.EmbeddingStore
+	// OllamaURL is the Ollama base URL used to embed query strings at runtime
+	// for `semantic_search`. Required when Embeddings is non-nil.
+	OllamaURL string
+}
+
 // Serve starts an MCP stdio server exposing graph query tools.
 func Serve(g *graph.Graph, communities map[int][]string) error {
+	return ServeWithOptions(g, communities, Options{})
+}
+
+// ServeWithOptions starts an MCP stdio server with optional semantic search.
+func ServeWithOptions(g *graph.Graph, communities map[int][]string, opts Options) error {
 	server := mcp.NewServer(&mcp.Implementation{
 		Name:    "gfy",
 		Version: "0.1.0",
 	}, nil)
 
-	registerTools(server, g, communities)
+	registerTools(server, g, communities, opts)
 
 	return server.Run(context.Background(), &mcp.StdioTransport{})
 }
 
-func registerTools(server *mcp.Server, g *graph.Graph, communities map[int][]string) {
+func registerTools(server *mcp.Server, g *graph.Graph, communities map[int][]string, opts Options) {
 	// Pre-compute containment maps for hierarchy tools.
 	children, parents := buildContainmentMaps(g)
 
 	registerOverviewTools(server, g, communities)
 	registerNavigationTools(server, g, children, parents)
-	registerSearchTools(server, g)
+	registerSearchTools(server, g, opts)
 	registerAnalysisTools(server, g, communities)
 }
 
@@ -313,7 +328,7 @@ func registerNavigationTools(server *mcp.Server, g *graph.Graph, children, paren
 
 // --- Search tools ---
 
-func registerSearchTools(server *mcp.Server, g *graph.Graph) {
+func registerSearchTools(server *mcp.Server, g *graph.Graph, opts Options) {
 	// search: fuzzy keyword search
 	type searchArgs struct {
 		Query string `json:"query" jsonschema:"search terms to match against node labels"`
@@ -342,6 +357,10 @@ func registerSearchTools(server *mcp.Server, g *graph.Graph) {
 		}
 		return textResult(fmt.Sprintf("Search results for %q:\n%s", args.Query, strings.Join(lines, "\n"))), nil, nil
 	})
+
+	if opts.Embeddings != nil && opts.OllamaURL != "" {
+		registerSemanticSearch(server, g, opts.Embeddings, opts.OllamaURL)
+	}
 
 	// get_subgraph: extract focused view
 	type subgraphArgs struct {
