@@ -1,5 +1,7 @@
-reference
-.gfy-out
+#
+priorart/
+reference/
+.gfy-out/
 /gfy
 
 # ycode local artifacts
