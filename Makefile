@@ -3,7 +3,7 @@ VERSION  := $(shell git describe --tags --always --dirty 2>/dev/null || echo dev
 LDFLAGS  := -ldflags "-X main.version=$(VERSION)"
 BINARY   := gfy
 
-.PHONY: help build test tidy lint install clean diff
+.PHONY: help build test tidy lint install clean diff fmtcheck hooks
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -31,3 +31,10 @@ diff: build ## Compare local working tree against remote tracking branch
 clean: ## Remove build artifacts
 	rm -f $(BINARY)
 	rm -rf .gfy-out
+
+fmtcheck:  ## gofmt gate — reports unformatted files, never rewrites them
+	@./scripts/fmtcheck.sh
+
+hooks:  ## install the pre-push formatting gate
+	@git config core.hooksPath scripts/hooks
+	@echo "hooks installed: core.hooksPath=scripts/hooks"
