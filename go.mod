@@ -1,6 +1,8 @@
 module github.com/qiangli/gfy
 
-go 1.26.5
+go 1.27
+
+toolchain go1.27.1
 
 require (
 	github.com/fsnotify/fsnotify v1.10.0
