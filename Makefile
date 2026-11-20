@@ -1,40 +1,58 @@
-MODULE   := github.com/qiangli/gfy
-VERSION  := $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
-LDFLAGS  := -ldflags "-X main.version=$(VERSION)"
-BINARY   := gfy
+###########################################################################
+##  GENERATED FILE — DO NOT EDIT.                                        ##
+##  Produced from dag.md by `bashy dag --makefile`. Edit dag.md instead, ##
+##  then regenerate; manual changes are overwritten and fail --check.    ##
+###########################################################################
+# Tasks live in dag.md (a bashy dag file); this Makefile only forwards.
+#   bashy dag <target>           run a target (its dependencies first)
+#   bashy dag --list             list targets
+#   bashy dag --dry-run <target> print the plan, run nothing
+#   bashy dag --skill DIR        export these tasks as an Agent Skill
+# Regenerate with: bashy dag --makefile  (verify: bashy dag --makefile --check)
 
-.PHONY: help build test tidy lint install clean diff fmtcheck hooks
+# List the dag targets, then how to run them natively.
+help: FORCE
+	@command -v bashy >/dev/null || { echo "requires bashy: https://github.com/qiangli/bashy"; exit 127; }; bashy dag --list; echo "Run: bashy dag <target> | skill: bashy dag --skill DIR | more: bashy help"
 
-help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
+# Build the gfy binary into ./gfy, injecting the version via ldflags.
+build: FORCE
+	@command -v bashy >/dev/null || { echo "requires bashy: https://github.com/qiangli/bashy"; exit 127; }; bashy dag build
 
-build: ## Build the gfy binary
-	go build $(LDFLAGS) -o $(BINARY) ./cmd/gfy
+# Run go mod tidy, go fmt, and go vet over cmd, pkg and internal.
+tidy: FORCE
+	@command -v bashy >/dev/null || { echo "requires bashy: https://github.com/qiangli/bashy"; exit 127; }; bashy dag tidy
 
-tidy: ## Run mod tidy, fmt, and vet
-	go mod tidy
-	go fmt ./cmd/... ./pkg/... ./internal/...
-	go vet ./cmd/... ./pkg/... ./internal/...
+# Run all tests.
+test: FORCE
+	@command -v bashy >/dev/null || { echo "requires bashy: https://github.com/qiangli/bashy"; exit 127; }; bashy dag test
 
-test: ## Run all tests
-	go test ./cmd/... ./pkg/... ./internal/...
+# Run golangci-lint.
+lint: FORCE
+	@command -v bashy >/dev/null || { echo "requires bashy: https://github.com/qiangli/bashy"; exit 127; }; bashy dag lint
 
-lint: ## Run golangci-lint
-	golangci-lint run
+# Install gfy to $GOPATH/bin with the version ldflags.
+install: FORCE
+	@command -v bashy >/dev/null || { echo "requires bashy: https://github.com/qiangli/bashy"; exit 127; }; bashy dag install
 
-install: ## Install to $GOPATH/bin
-	go install $(LDFLAGS) ./cmd/gfy
+# Compare the local working tree against the remote tracking branch.
+diff: FORCE
+	@command -v bashy >/dev/null || { echo "requires bashy: https://github.com/qiangli/bashy"; exit 127; }; bashy dag diff
 
-diff: build ## Compare local working tree against remote tracking branch
-	./$(BINARY) diff .
+# Remove build artifacts (the gfy binary and .gfy-out).
+clean: FORCE
+	@command -v bashy >/dev/null || { echo "requires bashy: https://github.com/qiangli/bashy"; exit 127; }; bashy dag clean
 
-clean: ## Remove build artifacts
-	rm -f $(BINARY)
-	rm -rf .gfy-out
+# The gofmt gate (reports unformatted files, never rewrites them), plus a check that the generated Makefile still matches this file — regenerate with `bashy dag…
+fmtcheck: FORCE
+	@command -v bashy >/dev/null || { echo "requires bashy: https://github.com/qiangli/bashy"; exit 127; }; bashy dag fmtcheck
 
-fmtcheck:  ## gofmt gate — reports unformatted files, never rewrites them
-	@./scripts/fmtcheck.sh
+# Install the pre-push formatting gate.
+hooks: FORCE
+	@command -v bashy >/dev/null || { echo "requires bashy: https://github.com/qiangli/bashy"; exit 127; }; bashy dag hooks
 
-hooks:  ## install the pre-push formatting gate
-	@git config core.hooksPath scripts/hooks
-	@echo "hooks installed: core.hooksPath=scripts/hooks"
+.DEFAULT: ; @command -v bashy >/dev/null || { echo "requires bashy: https://github.com/qiangli/bashy"; exit 127; }; bashy dag $@
+
+# FORCE names no file and has no recipe: as the one prerequisite it
+# keeps every forward running even when a file or directory on disk
+# shares a target's name. Dependency order stays in dag, not here.
+FORCE:
